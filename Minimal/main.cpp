@@ -1052,8 +1052,8 @@ protected:
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
-		//cave->renderCave(projection, glm::inverse(headPose), isLeft);
-		cave->renderController(projection, glm::inverse(headPose), hand);
+		cave->renderCave(projection, glm::inverse(headPose), isLeft);
+		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
 		

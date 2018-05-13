@@ -55,6 +55,8 @@ public:
 	GLsizei WIDTH = 1280;
 	GLsizei HEIGHT = 720;
 
+	//static glm::vec3 hand;
+
 	vector<string> cube_faces = {
 		"cube_pattern.ppm",
 		"cube_pattern.ppm",
