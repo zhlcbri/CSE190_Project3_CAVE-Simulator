@@ -43,6 +43,7 @@ public:
 	Cube * skybox_left;
 	Cube * skybox_right;
 	Cube * skybox_room;
+	Cube * controller;
 	Plane * plane;
 
 	GLuint cube_shader;
@@ -107,13 +108,11 @@ public:
 		skybox_right = new Cube(1, skybox_faces_right, true, false, false);
 		skybox_room = new Cube(1, skybox_faces_room, true, false, true);
 		cube_1 = new Cube(1, cube_faces, false, false, false); // first cube of size 1
+		controller = new Cube(1, cube_faces, false, false, false); // controller
 		plane = new Plane();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
-
-		glUseProgram(plane_shader);
-		glUniform1i(glGetUniformLocation(plane_shader, "screenTexture"), 0);
 
 		// shader configuration - maybe move to Plane::draw()
 		glUseProgram(plane_shader);
@@ -165,6 +164,7 @@ public:
 		delete(skybox_left);
 		delete(skybox_right);
 		delete(cube_1);
+		delete(controller);
 		delete(plane);
 		glDeleteProgram(cube_shader);
 		glDeleteProgram(plane_shader);
@@ -205,6 +205,24 @@ public:
 		cube_1->draw(cube_shader, projection, modelview);
 	};
 
+	void renderController(const mat4 & projection, const mat4 & modelview, vec3 hand) {
+		// render cube at left controller
+		// specify positions
+
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), hand);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -hand);
+
+		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.03f, 0.03f, 0.03f));
+
+		glm::mat4 M = posMat * scaleMat * posMat_in;
+
+		// draw cube at controller position
+		glUseProgram(cube_shader);
+		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		controller->draw(cube_shader, projection, modelview);
+	};
+
 
 	// render skybox and cubes
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
@@ -239,7 +257,7 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
 		// draw skybox and cubes
-		//render(projection, modelview, isLeftEye);
+		render(projection, modelview, isLeftEye);
 		////////
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -253,6 +271,7 @@ public:
 
 		// draw plane
 		//plane->draw(plane_shader, tempTex);
+		glUseProgram(plane_shader);
 		plane->draw(plane_shader, textureColorbuffer);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

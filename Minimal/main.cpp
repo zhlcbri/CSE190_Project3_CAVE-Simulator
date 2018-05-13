@@ -52,7 +52,7 @@ using namespace std;
 
 #include <GL/glew.h>
 
-glm::vec3 hand;
+glm::vec3 hand; // hand position
 
 /////// Custom variables
 bool cube_size_up = false; // set to true with LThumbStick to right
@@ -92,6 +92,7 @@ glm::mat4 headPos_right_curr = glm::mat4(1.0f);
 glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
 glm::mat4 headPos_right_prev = glm::mat4(1.0f);
 
+//Cube * controller;
 Cave * cave;
 Plane * plane; // temp use only
 //////////////////////
@@ -763,6 +764,12 @@ protected:
 		ovrVector3f handPosition[2];
 		handPosition[0] = handPoses[0].Position;
 		handPosition[1] = handPoses[1].Position;
+		
+		// update controller position
+		hand.x = handPosition[ovrHand_Left].x;
+		hand.y = handPosition[ovrHand_Left].y;
+		hand.z = handPosition[ovrHand_Left].z;
+		
 		// Display positions for debug purposes:
 		//cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << endl;
 		//cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << endl;
@@ -1041,12 +1048,15 @@ protected:
 		cubeScene.reset();
 	}
 
+
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
-		cave->renderCave(projection, glm::inverse(headPose), isLeft);
-
+		//cave->renderCave(projection, glm::inverse(headPose), isLeft);
+		cave->renderController(projection, glm::inverse(headPose), hand);
+		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
+		
 		//cubeScene->render(projection, glm::inverse(headPose), isLeft);
 	}
 };
