@@ -1,23 +1,6 @@
-/************************************************************************************
-
-Authors     :   Bradley Austin Davis <bdavis@saintandreas.org>
-Copyright   :   Copyright Brad Davis. All Rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-************************************************************************************/
-
 #include "Cube.h"
+#include "Plane.h"
+#include "Cave.h"
 #include "shader.h"
 
 #include <iostream>
@@ -69,6 +52,8 @@ using namespace std;
 
 #include <GL/glew.h>
 
+glm::vec3 hand;
+
 /////// Custom variables
 bool cube_size_up = false; // set to true with LThumbStick to right
 bool cube_size_down = false; // set to true with LThumbStick to left
@@ -99,9 +84,6 @@ bool b2 = false; // orientation only (position frozen to what it just was before
 bool b3 = false; // position only (orientation frozen to what it just was)
 bool b4 = false; // no tracking (position and orientation frozen to what they just were when the user pressed the button)
 
-// Button Y controls
-bool superRotation = false; // toggled by Y button
-
 bool isPressed = false; // true if any button is pressed
 
 // HMD transformation matrices
@@ -110,15 +92,8 @@ glm::mat4 headPos_right_curr = glm::mat4(1.0f);
 glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
 glm::mat4 headPos_right_prev = glm::mat4(1.0f);
 
-// euler angles of HMD's rotation matrix
-
-float theta_x_curr, theta_y_curr, theta_z_curr = 0.0f;
-float theta_x_prev, theta_y_prev, theta_z_prev = 0.0f;
-glm::mat4 headPos_curr = glm::mat4(1.0f);
-glm::mat4 headPos_prev = glm::mat4(1.0f);
-
-float pi = atanf(1) * 4;
-
+Cave * cave;
+Plane * plane; // temp use only
 //////////////////////
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
@@ -481,6 +456,9 @@ class RiftApp : public GlfwApp, public RiftManagerApp {
 public:
 
 private:
+	// new framebuffer
+	//GLuint _fbo_2{ 0 };
+
 	GLuint _fbo{ 0 };
 	GLuint _depthBuffer{ 0 };
 	ovrTextureSwapChain _eyeTexture;
@@ -488,7 +466,7 @@ private:
 	GLuint _mirrorFbo{ 0 };
 	ovrMirrorTexture _mirrorTexture;
 
-	ovrEyeRenderDesc _eyeRenderDescs[2]; // ?
+	ovrEyeRenderDesc _eyeRenderDescs[2];
 
 	mat4 _eyeProjections[2];
 
@@ -518,11 +496,9 @@ public:
 			_viewScaleDesc.HmdToEyePose[eye] = erd.HmdToEyePose; 
 
 			// get IOD see slides
-		    iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);
-			original_iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);
+		    /*iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);
+			original_iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);*/
 			
-			//cout << "original iod is: " << original_iod << endl;
-
 			ovrFovPort & fov = _sceneLayer.Fov[eye] = _eyeRenderDescs[eye].Fov;
 			auto eyeSize = ovr_GetFovTextureSize(_session, eye, fov, 1.0f);
 			_sceneLayer.Viewport[eye].Size = eyeSize;
@@ -581,8 +557,13 @@ protected:
 
 		// Set up the framebuffer object
 		glGenFramebuffers(1, &_fbo);
+		/*glGenFramebuffers(1, &_fbo_2);*/
+
 		glGenRenderbuffers(1, &_depthBuffer);
+		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+		/*glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo_2);*/
+
 		glBindRenderbuffer(GL_RENDERBUFFER, _depthBuffer);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, _renderTargetSize.x, _renderTargetSize.y);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -632,7 +613,7 @@ protected:
 				cube_size_down = true;
 				//cube_size_up = false;
 			}
-			else if (inputState.Thumbstick[ovrHand_Left].x > 0) { 
+			else if (inputState.Thumbstick[ovrHand_Left].x > 0) {
 				//cout << "left thumbstick to the right" << endl; 
 				cube_size_up = true;
 				//cube_size_down = false;
@@ -649,7 +630,7 @@ protected:
 
 			///////////////////////////////
 			// Logic to cycle between five modes with the 'A' button
-			if ((inputState.Buttons & ovrButton_A) && !isPressed) { 
+			if ((inputState.Buttons & ovrButton_A) && !isPressed) {
 				//cout << "Button A pressed" << endl;
 				isPressed = true;
 
@@ -689,23 +670,23 @@ protected:
 				if (x1) {
 					x1 = false;
 					x2 = true;
-					cout << "showing just the sky box in stereo" << endl;
+					//cout << "showing just the sky box in stereo" << endl;
 				}
 				else if (x2) {
 					x2 = false;
 					x3 = true;
-					cout << "showing just the sky box in mono" << endl;
+					//cout << "showing just the sky box in mono" << endl;
 				}
 				else if (x3) {
 					x3 = false;
 					x4 = true;
-					cout << "showing my room" << endl;
+					//cout << "showing my room" << endl;
 				}
 				else if (x4) {
 					x4 = false;
 					x1 = true;
-					cout << "showing the entire scene" << endl;
-				}							
+					//cout << "showing the entire scene" << endl;
+				}
 			}
 
 			///////////////////////////////
@@ -717,45 +698,28 @@ protected:
 				if (b1) {
 					b1 = false;
 					b2 = true;
-					cout << "orientation only (position frozen to what it just was before the mode was selected)" << endl;
+					//cout << "orientation only (position frozen to what it just was before the mode was selected)" << endl;
 				}
 				else if (b2) {
 					b2 = false;
 					b3 = true;
-					cout << "position only (orientation frozen to what it just was)" << endl;
+					//cout << "position only (orientation frozen to what it just was)" << endl;
 				}
 				else if (b3) {
 					b3 = false;
 					b4 = true;
-					cout << "no tracking (position and orientation frozen to what they just were when the user pressed the button)" << endl;
+					//cout << "no tracking (position and orientation frozen to what they just were when the user pressed the button)" << endl;
 				}
 				else if (b4) {
 					b4 = false;
 					b1 = true;
-					cout << "regular tracking (both position and orientation)" << endl;
+					//cout << "regular tracking (both position and orientation)" << endl;
 				}
 
 			}
-			else if ((inputState.Buttons & ovrButton_Y) && !isPressed) {
-				isPressed = true;
-				if (superRotation) superRotation = false;
-				else superRotation = true;
-			}
-
-			/////////////
-			// change iod
-			if (iod_up && iod < 0.3) {
-				iod += 0.01;
-			}
-			else if (iod_down && iod > -0.1) {
-				iod -= 0.01;
-			}
-			else if (iod_reset) {
-				iod = original_iod;
-			}
-			_viewScaleDesc.HmdToEyePose[0].Position.x = (float)(-iod / 2);
-			_viewScaleDesc.HmdToEyePose[1].Position.x = (float)(iod / 2);
 		}
+		/////////////
+		// change iod
 
 		// reset booleans
 		iod_up = false;
@@ -811,39 +775,16 @@ protected:
 		///// head positions this frame
 		headPos_left_curr = ovr::toGlm(eyePoses[ovrEye_Left]);
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
-		
-		/////////
-		// do nothing on regular tracking mode (b1)
-
-		if (b2) {
-			// orientation only
-			// position frozen to last frame
-			headPos_left_curr[3] = headPos_left_prev[3];
-			headPos_right_curr[3] = headPos_right_prev[3];
-		}
-		else if (b3) {
-			// position only
-			// orientation frozen to last frame
-			headPos_left_curr[0] = headPos_left_prev[0];
-			headPos_left_curr[1] = headPos_left_prev[1];
-			headPos_left_curr[2] = headPos_left_prev[2];
-
-			headPos_right_curr[0] = headPos_right_prev[0];
-			headPos_right_curr[1] = headPos_right_prev[1];
-			headPos_right_curr[2] = headPos_right_prev[2];
-		}
-		else if (b4) {
-			// no tracking
-			// position and orientation frozen to last frame
-			headPos_left_curr = headPos_left_prev;
-			headPos_right_curr = headPos_right_prev;
-		}
+		// here used to be "B" button controls
 
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
 		GLuint curTexId;
 		ovr_GetTextureSwapChainBufferGL(_session, _eyeTexture, curIndex, &curTexId);
+		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo_2);
+
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -855,30 +796,22 @@ protected:
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 			
 			if (a1) {
-				//renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]));  // cse190: this is for normal stereo rendering
-
-				// call renderScene() twice one time for each eye
+				// normal stereo rendering; call renderScene() twice one time for each eye
 				if (eye == ovrEye_Left) {
-					//renderScene(_eyeProjections[ovrEye_Left], ovr::toGlm(eyePoses[ovrEye_Left]), true);
 					renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
-
 				}
 				else {
-					//renderScene(_eyeProjections[ovrEye_Right], ovr::toGlm(eyePoses[ovrEye_Right]), false);
 					renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
-
 				}			
 			}
 
 			else if (a2) {
 				// render one eye's view to both eyes = monoscopic view
-				/*renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[ovrEye_Left]), true);*/
 				renderScene(_eyeProjections[eye], headPos_left_curr, true);
 			}
 			else if (a3) {
 				// render to only left eye
 				if (eye == ovrEye_Left) {
-					//renderScene(_eyeProjections[ovrEye_Left], ovr::toGlm(eyePoses[ovrEye_Left]), true);
 					renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
 				}
 				
@@ -886,16 +819,11 @@ protected:
 			else if (a4) {
 				// render to only right eye
 				if (eye == ovrEye_Right) {
-					//renderScene(_eyeProjections[ovrEye_Right], ovr::toGlm(eyePoses[ovrEye_Right]), false);
-
 					renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
 				}
 			}
 			else if (a5) {
 				// render left eye to right eye and vice versa - inverted stereo
-				/*if (eye == ovrEye_Left) renderScene(_eyeProjections[ovrEye_Right], ovr::toGlm(eyePoses[ovrEye_Right]), false);
-				if (eye == ovrEye_Right) renderScene(_eyeProjections[ovrEye_Left], ovr::toGlm(eyePoses[ovrEye_Left]), true);*/
-
 				if (eye == ovrEye_Left) renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
 				if (eye == ovrEye_Right) renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
 			}
@@ -922,6 +850,8 @@ protected:
 
 	/*virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) = 0;*/
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) = 0;
+
+	// new renderCave() method; need at least projection and view as parameter
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -941,6 +871,7 @@ public:
 	Cube * skybox_room;
 
 	GLuint cube_shader;
+	GLuint plane_shader;
 
 	vector<string> cube_faces = {
 		"cube_pattern.ppm",
@@ -983,6 +914,9 @@ public:
 	const char * CUBE_VERT_PATH = "shader_cube.vert";
 	const char * CUBE_FRAG_PATH = "shader_cube.frag";
 
+	const char * PLANE_VERT_PATH = "shader_plane.vert";
+	const char * PLANE_FRAG_PATH = "shader_plane.frag";
+
 	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
 	ColorCubeScene() {
@@ -995,6 +929,11 @@ public:
 		cube_1 = new Cube(1, cube_faces, false, false, false); // first cube of size 1
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
+		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
+
+		// shader configuration - maybe move to Plane::draw()
+		glUseProgram(plane_shader);
+		glUniform1i(glGetUniformLocation(plane_shader, "screenTexture"), 0);
 	}
 
 	~ColorCubeScene(){
@@ -1002,7 +941,7 @@ public:
 		delete(skybox_right);
 		delete(cube_1);
 		glDeleteProgram(cube_shader);
-		// delete char * ?
+		glDeleteProgram(plane_shader);
 	}
 
 	void resetCubes() {
@@ -1013,8 +952,7 @@ public:
 		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
 	}
 
-	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
-
+	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 		// change cubeScaleMat according to booleans
 		if (cube_size_up) {
 			if (cubeScaleMat[0][0] < 0.5f && cubeScaleMat[1][1] < 0.5f && cubeScaleMat[2][2] < 0.5f) {
@@ -1031,6 +969,33 @@ public:
 			resetCubes();
 		}
 
+		// render cubes
+		// specify positions
+		vec3 pos_1 = vec3(0.0f, 0.0f, -4.0f);
+		vec3 pos_2 = vec3(0.0f, 0.0f, -8.0f);
+
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
+		glm::mat4 M = posMat * cubeScaleMat * posMat_in;
+
+		// draw closer cube
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		cube_1->draw(cube_shader, projection, modelview);
+
+		posMat = glm::translate(glm::mat4(1.0f), pos_2);
+		posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
+		M = posMat * cubeScaleMat * posMat_in;
+
+		// draw further cube
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		cube_1->draw(cube_shader, projection, modelview);
+	}
+
+
+	// render skybox and cubes
+	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
+
+		// shader configuration
 		glUseProgram(cube_shader);
 		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
 
@@ -1038,49 +1003,16 @@ public:
 		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f));
 		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &scaleMat[0][0]);
 
-		// render in different modes 
-		if (x1 || x2) {
-			// render different texture images for left and right eye to create stereo effect
-			if (isLeftEye) {
-				//cout << "isLeftEye" << endl;
-				skybox_left->draw(cube_shader, projection, modelview);
-			}
-			else {
-				//cout << "isRightEye" << endl;
-				skybox_right->draw(cube_shader, projection, modelview);
-			}
-
-			if (x1) {
-				// render cubes
-				// specify positions
-				vec3 pos_1 = vec3(0.0f, 0.0f, -4.0f);
-				vec3 pos_2 = vec3(0.0f, 0.0f, -8.0f);
-
-				glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);
-				glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
-				glm::mat4 M = posMat * cubeScaleMat * posMat_in;
-
-				// draw closer cube
-				glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-				cube_1->draw(cube_shader, projection, modelview);
-
-				posMat = glm::translate(glm::mat4(1.0f), pos_2);
-				posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
-				M = posMat * cubeScaleMat * posMat_in;
-
-				// draw further cube
-				glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-				cube_1->draw(cube_shader, projection, modelview);
-			}
-		}
-		else if (x3) {
-			// render just skybox in mono
+		// render different texture images for left and right eye to create stereo effect
+		if (isLeftEye) {
 			skybox_left->draw(cube_shader, projection, modelview);
 		}
-		else if (x4) {
-			// render custom skybox
-			skybox_room->draw(cube_shader, projection, modelview);
+		else {
+			skybox_right->draw(cube_shader, projection, modelview);
 		}
+
+		//renderCubes(projection, modelview, uProjection);
+
 	}
 };
 
@@ -1101,121 +1033,21 @@ protected:
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
 		cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
+
+		cave = new Cave();
 	}
 
 	void shutdownGl() override {
 		cubeScene.reset();
 	}
 
-	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
-	//	//cubeScene->render(projection, glm::inverse(headPose));
-	//}
-
-	mat3 computeRotation(float theta_x, float theta_y, float theta_z) {
-		mat3 X, Y, Z = mat3(1.0f);
-
-		X[1][1] = cosf(theta_x);
-		X[2][1] = -sinf(theta_x);
-		X[1][2] = sinf(theta_x);
-		X[2][2] = cosf(theta_x);
-
-		Y[0][0] = cosf(theta_y);
-		Y[0][2] = -sinf(theta_y);
-		Y[2][0] = sinf(theta_y);
-		Y[2][2] = cosf(theta_y);
-
-		Z[0][0] = cosf(theta_z);
-		Z[0][1] = sinf(theta_z);
-		Z[1][0] = -sinf(theta_z);
-		Z[1][1] = cosf(theta_z);
-
-		mat3 R = Z * Y * X;
-		/*mat3 R = Z * X * Y;*/
-
-		/*mat3 R = Y * X * Z;*/
-		/*mat3 R = Y * Z * X;*/
-
-		/*mat3 R = X * Z * Y;*/
-		//mat3 R = X * Y * Z;
-
-		return R;
-	}
-
 	// newly defined function
-	// To freeze head rotation and/or position, manipulate mat4 headPose (see notes)
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
-		headPos_curr = headPose;
 
-		if (!superRotation) {
-			cubeScene->render(projection, glm::inverse(headPose), isLeft);
-			if (!isPressed) {
-				cout << "old head pose" << endl;				
-				cout << "inverse(headPose)[0]: " << glm::inverse(headPose)[0].x << ", " << glm::inverse(headPose)[0].y << ", " << glm::inverse(headPose)[0].z << endl;
-				cout << "inverse(headPose)[1]: " << glm::inverse(headPose)[1].x << ", " << glm::inverse(headPose)[1].y << ", " << glm::inverse(headPose)[1].z << endl;
-				cout << "inverse(headPose)[2]: " << glm::inverse(headPose)[2].x << ", " << glm::inverse(headPose)[2].y << ", " << glm::inverse(headPose)[2].z << endl;
-			}
-		}
-		else {
-			// Super-rotation
+		cave->renderCave(projection, glm::inverse(headPose), isLeft);
 
-			//// 1. compute euler angles from HMD's rotation matrix
-			mat3 R = mat3(headPos_curr[0], headPos_curr[1], headPos_curr[2]);
-
-			// euler angles for left eye
-			/*theta_x_curr = atan2f(R[1][2], R[2][2]);
-			theta_y_curr = atan2f(-R[0][2], sqrt(pow(R[1][2], 2) + pow(R[2][2], 2)));
-			theta_z_curr = atan2f(R[0][1], R[0][0]);*/
-			//////////////////////////////////////////
-
-			theta_y_curr = atan2f(R[1][1], R[2][1]);
-			theta_z_curr = atan2f(-R[0][1], sqrt(pow(R[1][1], 2) + pow(R[2][1], 2)));
-			theta_x_curr = atan2f(R[0][0], R[0][2]);
-
-			/*theta_y_curr = atan2f(R[1][0], R[2][0]);
-			theta_z_curr = atan2f(-R[0][0], sqrt(pow(R[1][0], 2) + pow(R[2][0], 2)));
-			theta_x_curr = atan2f(R[0][2], R[0][1]);*/
-
-			/*theta_y_curr = atan2f(R[1][2], R[2][2]);
-			theta_z_curr = atan2f(-R[0][2], sqrt(pow(R[1][2], 2) + pow(R[2][2], 2)));
-			theta_x_curr = atan2f(R[0][1], R[0][0]);*/
-
-
-			//cout << "theta_curr: " << theta_x_curr << ", " << theta_y_curr/* *2*/ << ", " << theta_z_curr << endl;
-
-			//// 2. get the delta value of euler angles between two frames
-			//// 3. double the delta values;
-			//float delta_x = (theta_x_curr - theta_x_prev)/* * 2*/;
-			//float delta_y = (theta_y_curr - theta_y_prev)/* * 2*/;
-			//float delta_z = (theta_z_curr - theta_z_prev)/* * 2*/;
-
-			//// 4. use the new delta values to compose a new rotation matrix
-			// call function plug in delta values
-			/*float x = theta_x_curr;
-			float y = theta_y_curr * 2.0;
-			float z = theta_z_curr;*/
-
-			//mat3 new_R = computeRotation(theta_x_curr, y, theta_z_curr);
-
-			mat3 new_R = computeRotation(theta_z_curr, theta_x_curr * 2.0, theta_y_curr);
-
-			//// 5. assign new rotation matrix back to transformation matrix
-			mat4 new_T = mat4(new_R);
-			new_T[3] = headPos_curr[3];
-			// do I need to put [0][3], [1][3], and [2][3] ?
-
-			// 6. done
-			headPos_curr = new_T;
-			cubeScene->render(projection, glm::inverse(headPos_curr), isLeft);
-
-			if (isPressed) {
-				cout << "new head pose" << endl;
-				cout << "inverse(headPose)[0]: " << glm::inverse(headPose)[0].x << ", " << glm::inverse(headPose)[0].y << ", " << glm::inverse(headPose)[0].z << endl;
-				cout << "inverse(headPose)[1]: " << glm::inverse(headPose)[1].x << ", " << glm::inverse(headPose)[1].y << ", " << glm::inverse(headPose)[1].z << endl;
-				cout << "inverse(headPose)[2]: " << glm::inverse(headPose)[2].x << ", " << glm::inverse(headPose)[2].y << ", " << glm::inverse(headPose)[2].z << endl;
-			}
-		}
-
-		headPos_prev = headPos_curr;
+		//cave->render(projection, glm::inverse(headPose), isLeft);
+		//cubeScene->render(projection, glm::inverse(headPose), isLeft);
 	}
 };
  

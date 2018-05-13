@@ -133,13 +133,17 @@
     <None Include="packages.config" />
     <None Include="shader_cube.frag" />
     <None Include="shader_cube.vert" />
+    <None Include="shader_plane.frag" />
+    <None Include="shader_plane.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cave.h" />
     <ClInclude Include="Cube.h" />
+    <ClInclude Include="Plane.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
