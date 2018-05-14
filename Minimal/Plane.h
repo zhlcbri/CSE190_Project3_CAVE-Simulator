@@ -40,6 +40,7 @@ private:
 
 public:
 	GLuint quadVAO, quadVBO;
+	GLuint uProjection, uModelview;
 
 	//GLuint FBO, textureColorbuffer;
 
@@ -50,16 +51,20 @@ public:
 		// screen quad VAO
 		glGenVertexArrays(1, &quadVAO);
 		glGenBuffers(1, &quadVBO);
+
 		glBindVertexArray(quadVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
 		//glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)(2 * sizeof(float)));
 		
-		// glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		// Unbind the currently bound buffer so that we don't accidentally make unwanted changes to it.
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
 	};
 
 	~Plane() {
@@ -69,20 +74,31 @@ public:
 	}
 
 
-	void draw(GLuint shaderProgram, GLuint texColorbuffer) {
-		//glDisable(GL_CULL_FACE); //
+	//void draw(GLuint shaderProgram, GLuint texColorbuffer) {
+
+	void draw(GLuint shaderProgram, GLuint texColorbuffer, const glm::mat4 & projection, const glm::mat4 & modelview) {
+		//glDisable(GL_CULL_FACE);
 
 		glUseProgram(shaderProgram);
+
+		uProjection = glGetUniformLocation(shaderProgram, "projection");
+		uModelview = glGetUniformLocation(shaderProgram, "view");
+
+		// send these values to the shader program
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &projection[0][0]);
+		glUniformMatrix4fv(uModelview, 1, GL_FALSE, &modelview[0][0]);
+
 		glBindVertexArray(quadVAO);
-		//glBindTexture(GL_TEXTURE_2D, texColorbuffer); // use the color attachment texture as the texture of the quad plane
-		
+
+		// use the color attachment texture as the texture of the quad plane
 		//glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texColorbuffer);
 		//glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
 		
+		// Draw triangles
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
 	};
-
 
 	float quadVertices[24] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 							   // positions   // texCoords

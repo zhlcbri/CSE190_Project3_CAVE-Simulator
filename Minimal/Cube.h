@@ -163,8 +163,8 @@ public:
 		// We need to calculate this because modern OpenGL does not keep track of any matrix other than the viewport (D)
 		// Consequently, we need to forward the projection, view, and model matrices to the shader programs
 		// Get the location of the uniform variables "projection" and "modelview"
-		uProjection = glGetUniformLocation(shaderProgram, "projection");// light.colorvec3
-																		//    uModelview = glGetUniformLocation(shaderProgram, "modelview");
+		uProjection = glGetUniformLocation(shaderProgram, "projection");
+																		
 		uModelview = glGetUniformLocation(shaderProgram, "view");
 
 		// Now send these values to the shader program
@@ -221,6 +221,7 @@ public:
 		/*glDepthMask(GL_TRUE);*/
 
 		glDepthFunc(GL_LESS); // set depth function back to default
+		glCullFace(GL_BACK);
 	};
 
 	// Define the coordinates and indices needed to draw the cube. Note that it is not necessary

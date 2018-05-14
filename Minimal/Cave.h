@@ -44,7 +44,7 @@ public:
 	Cube * skybox_right;
 	Cube * skybox_room;
 	Cube * controller;
-	Plane * plane;
+	Plane * plane_1;
 
 	GLuint cube_shader;
 	GLuint plane_shader;
@@ -105,13 +105,15 @@ public:
 
 	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
+	glm::mat4 quadScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale quad
+
 	Cave() {
 		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
 		skybox_right = new Cube(1, skybox_faces_right, true, false, false);
 		skybox_room = new Cube(1, skybox_faces_room, true, false, true);
-		cube_1 = new Cube(1, cube_faces, false, false, false); // first cube of size 1
+		cube_1 = new Cube(1, cube_faces, false, false, false); // calibration cube
 		controller = new Cube(1, cube_faces, false, false, false); // controller
-		plane = new Plane();
+		plane_1 = new Plane();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
@@ -135,18 +137,6 @@ public:
 		// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
-		/////////////////////////////////////
-		//tempTex = loadTexture(tex_temp);
-
-		//glGenTextures(1, &tempTex);
-		//glBindTexture(GL_TEXTURE_2D, tempTex);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); // TEXTURE_WIDTH?
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tempTex, 0);
-		/////////////////////////////////////
-
-
 		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
 		glGenRenderbuffers(1, &rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -167,7 +157,7 @@ public:
 		delete(skybox_right);
 		delete(cube_1);
 		delete(controller);
-		delete(plane);
+		delete(plane_1);
 		glDeleteProgram(cube_shader);
 		glDeleteProgram(plane_shader);
 		glDeleteBuffers(1, &FBO);
@@ -182,6 +172,25 @@ public:
 		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
 	};
 
+	void renderController(const mat4 & projection, const mat4 & modelview, vec3 hand) {
+		// render cube at left controller
+		// specify positions
+
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), hand);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -hand);
+
+		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.03f, 0.03f, 0.03f));
+
+		glm::mat4 M = posMat * scaleMat * posMat_in;
+
+		// draw cube at controller position
+		glUseProgram(cube_shader);
+		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		controller->draw(cube_shader, projection, modelview);
+	};
+
+	////////////////////
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 		// change cubeScaleMat according to booleans
 
@@ -207,24 +216,24 @@ public:
 		cube_1->draw(cube_shader, projection, modelview);
 	};
 
-	void renderController(const mat4 & projection, const mat4 & modelview, vec3 hand) {
-		// render cube at left controller
+	////////////////////
+	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
+		// specify scale
+
 		// specify positions
+		vec3 pos_1 = vec3(0.0f, 0.0f, -4.0f);
 
-		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), hand);
-		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -hand);
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
+		glm::mat4 M = posMat * quadScaleMat * posMat_in;
 
-		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.03f, 0.03f, 0.03f));
+		// temp
+		M = glm::mat4(1.0f);
 
-		glm::mat4 M = posMat * scaleMat * posMat_in;
-
-		// draw cube at controller position
-		glUseProgram(cube_shader);
-		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
+		// draw 1st quad
 		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		controller->draw(cube_shader, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
 	};
-
 
 	// render skybox and cubes
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
@@ -248,38 +257,35 @@ public:
 		//renderCubes(projection, modelview, uProjection);
 	};
 
-	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
+	/////////////////////
+	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO) {
 
 		// bind to new framebuffer and draw scene as we normally would to color texture 
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glEnable(GL_DEPTH_TEST); // enable depth testing (disabled for rendering screen-space quad)
+		//glEnable(GL_DEPTH_TEST); // enable depth testing (disabled for rendering screen-space quad)
 		
 		// clear the framebuffer's content
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+		//glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
 		// draw skybox and cubes
 		render(projection, modelview, isLeftEye);
 		////////
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-		
-		// clear all relevant buffers
-		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // matcha color >w<
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		// draw plane
-		//plane->draw(plane_shader, tempTex);
 		glUseProgram(plane_shader);
-		plane->draw(plane_shader, textureColorbuffer);
+		GLuint uProjection = glGetUniformLocation(plane_shader, "model");
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-		// -------------------------------------------------------------------------------
-		/*glfwSwapBuffers(window);
-		glfwPollEvents();*/
+		renderQuads(projection, modelview, uProjection);
+		
+		// clear all relevant buffers
+		//glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // set clear color
+		//glClear(GL_COLOR_BUFFER_BIT);
+		
 	};
 
 	// utility function for loading a 2D texture from file

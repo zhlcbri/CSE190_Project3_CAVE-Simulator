@@ -455,12 +455,13 @@ public:
 
 class RiftApp : public GlfwApp, public RiftManagerApp {
 public:
+	GLuint _fbo{ 0 };
 
 private:
 	// new framebuffer
 	//GLuint _fbo_2{ 0 };
 
-	GLuint _fbo{ 0 };
+	/*GLuint _fbo{ 0 };*/
 	GLuint _depthBuffer{ 0 };
 	ovrTextureSwapChain _eyeTexture;
 
@@ -1052,7 +1053,7 @@ protected:
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
-		cave->renderCave(projection, glm::inverse(headPose), isLeft);
+		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
