@@ -37,6 +37,10 @@
 using namespace std;
 using namespace glm;
 
+// Button B controls
+bool b1 = true; // regular head tracking (both position and orientation)
+bool b2 = false; // orientation only (position frozen to what it just was before the mode was selected)
+
 class Cave {
 private:
 
@@ -206,13 +210,13 @@ public:
 		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
 		cube_1->draw(cube_shader, projection, modelview);
 
-		posMat = glm::translate(glm::mat4(1.0f), pos_2);
-		posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
-		M = posMat * cubeScaleMat * posMat_in;
+		//posMat = glm::translate(glm::mat4(1.0f), pos_2);
+		//posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
+		//M = posMat * cubeScaleMat * posMat_in;
 
-		// draw further cube
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		cube_1->draw(cube_shader, projection, modelview);
+		//// draw further cube
+		//glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		//cube_1->draw(cube_shader, projection, modelview);
 	};
 
 	////////////////////
@@ -273,9 +277,11 @@ public:
 		// freeze head orientation
 		headPos_curr = modelview;
 
-		headPos_curr[0] = headPos_prev[0];
-		headPos_curr[1] = headPos_prev[1];
-		headPos_curr[2] = headPos_prev[2];
+		if (b2) {
+			headPos_curr[0] = headPos_prev[0];
+			headPos_curr[1] = headPos_prev[1];
+			headPos_curr[2] = headPos_prev[2];
+		}	
 
 		// shader configuration
 		glUseProgram(cube_shader);

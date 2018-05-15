@@ -79,10 +79,8 @@ bool a4 = false; // right eye only (left eye black)
 bool a5 = false; // inverted stereo (left eye image rendered to right eye and vice versa)
 
 // Button B controls
-bool b1 = true; // regular head tracking (both position and orientation)
-bool b2 = false; // orientation only (position frozen to what it just was before the mode was selected)
-bool b3 = false; // position only (orientation frozen to what it just was)
-bool b4 = false; // no tracking (position and orientation frozen to what they just were when the user pressed the button)
+//bool b1 = true; // regular head tracking (both position and orientation)
+//bool b2 = false; // orientation only (position frozen to what it just was before the mode was selected)
 
 bool isPressed = false; // true if any button is pressed
 
@@ -706,20 +704,8 @@ protected:
 				}
 				else if (b2) {
 					b2 = false;
-					b3 = true;
-					//cout << "position only (orientation frozen to what it just was)" << endl;
-				}
-				else if (b3) {
-					b3 = false;
-					b4 = true;
-					//cout << "no tracking (position and orientation frozen to what they just were when the user pressed the button)" << endl;
-				}
-				else if (b4) {
-					b4 = false;
 					b1 = true;
-					//cout << "regular tracking (both position and orientation)" << endl;
 				}
-
 			}
 		}
 		/////////////
@@ -897,13 +883,6 @@ protected:
 
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
-		//headPos_curr = headPose;
-
-		// position only
-		// orientation frozen to last frame
-		/*headPos_curr[0] = headPos_prev[0];
-		headPos_curr[1] = headPos_prev[1];
-		headPos_curr[2] = headPos_prev[2];*/
 
 		//cout << "isLeft: " << isLeft << endl;
 		
@@ -914,8 +893,6 @@ protected:
 		//cave->render(projection, glm::inverse(headPose), isLeft);
 		
 		//cubeScene->render(projection, glm::inverse(headPose), isLeft);
-
-		//headPos_prev = headPos_curr;
 	}
 };
  
