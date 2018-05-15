@@ -57,7 +57,10 @@ public:
 	GLsizei WIDTH = 1280;
 	GLsizei HEIGHT = 720;
 
-	//static glm::vec3 hand;
+	glm::mat4 headPos_curr = glm::mat4(1.0f);
+	glm::mat4 headPos_prev = glm::mat4(1.0f);
+
+	/*glm::vec3 hand;*/
 
 	vector<string> cube_faces = {
 		"cube_pattern.ppm",
@@ -186,24 +189,6 @@ public:
 		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
 	};
 
-	void renderController(const mat4 & projection, const mat4 & modelview, vec3 hand) {
-		// render cube at left controller
-		// specify positions
-
-		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), hand);
-		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -hand);
-
-		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.03f, 0.03f, 0.03f));
-
-		glm::mat4 M = posMat * scaleMat * posMat_in;
-
-		// draw cube at controller position
-		glUseProgram(cube_shader);
-		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		controller->draw(cube_shader, projection, modelview);
-	};
-
 	////////////////////
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 		// change cubeScaleMat according to booleans
@@ -232,7 +217,6 @@ public:
 
 	////////////////////
 	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel) {
-		// specify scale
 
 		// specify positions
 		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
@@ -263,34 +247,60 @@ public:
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
 		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
 
+	};
 
-		//plane_1->draw(plane_shader, tempTex, projection, modelview);
+	void renderController(const mat4 & projection, const mat4 & modelview, vec3 handPos) {
+		// render cube at left controller
+		// specify positions
+
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), handPos);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -handPos);
+
+		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.03f, 0.03f, 0.03f));
+
+		glm::mat4 M = posMat * scaleMat * posMat_in;
+
+		// draw cube at controller position
+		glUseProgram(cube_shader);
+		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
+		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		controller->draw(cube_shader, projection, modelview);
 	};
 
 	// render skybox and cubes
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
 
+		// freeze head orientation
+		headPos_curr = modelview;
+
+		headPos_curr[0] = headPos_prev[0];
+		headPos_curr[1] = headPos_prev[1];
+		headPos_curr[2] = headPos_prev[2];
+
 		// shader configuration
 		glUseProgram(cube_shader);
-		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
+		GLuint uModel = glGetUniformLocation(cube_shader, "model");
 
 		// render skybox
 		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f));
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &scaleMat[0][0]);
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &scaleMat[0][0]);
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
 			//cout << "drawing left box" << endl;
 
-			skybox_left->draw(cube_shader, projection, modelview);
+			skybox_left->draw(cube_shader, projection, /*modelview)*/headPos_curr);
 		}
 		else {
 			//cout << "drawing right box" << endl;
 			
-			skybox_right->draw(cube_shader, projection, modelview);
+			skybox_right->draw(cube_shader, projection, /*modelview)*/headPos_curr);
 		}
 
-		renderCubes(projection, modelview, uProjection);
+		renderCubes(projection, /*modelview)*/headPos_curr, uModel);
+
+		// store head position from the last frame
+		headPos_prev = headPos_curr;
 	};
 
 	/////////////////////
@@ -305,7 +315,7 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
 		// draw skybox and cubes
-		render(projection, modelview, isLeftEye);
+		render(projection,modelview, isLeftEye);
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
@@ -320,7 +330,7 @@ public:
 		// clear all relevant buffers
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // set clear color
 		//glClear(GL_COLOR_BUFFER_BIT);
-		
+
 	};
 
 	// utility function for loading a 2D texture from file

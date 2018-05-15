@@ -52,7 +52,7 @@ using namespace std;
 
 #include <GL/glew.h>
 
-glm::vec3 hand; // hand position
+//glm::vec3 hand; // hand position
 
 /////// Custom variables
 bool cube_size_up = false; // set to true with LThumbStick to right
@@ -91,6 +91,8 @@ glm::mat4 headPos_left_curr = glm::mat4(1.0f);
 glm::mat4 headPos_right_curr = glm::mat4(1.0f);
 glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
 glm::mat4 headPos_right_prev = glm::mat4(1.0f);
+
+glm::vec3 hand = glm::vec3(1.0f);
 
 //Cube * controller;
 Cave * cave;
@@ -785,6 +787,9 @@ protected:
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
 		// here used to be "B" button controls
 
+		//headPos_left_curr[3] = headPos_left_prev[3];
+		//headPos_right_curr[3] = headPos_right_prev[3];
+
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
 		GLuint curTexId;
@@ -864,172 +869,10 @@ protected:
 	// new renderCave() method; need at least projection and view as parameter
 };
 
-//////////////////////////////////////////////////////////////////////
-//
-// The remainder of this code is specific to the scene we want to 
-// render.  I use oglplus to render an array of cubes, but your 
-// application would perform whatever rendering you want
-//
-
-// a class for encapsulating building and rendering an RGB cube
-struct ColorCubeScene {
-
-public:
-	Cube * cube_1;
-	Cube * skybox_left;
-	Cube * skybox_right;
-	Cube * skybox_room;
-
-	GLuint cube_shader;
-	GLuint plane_shader;
-
-	vector<string> cube_faces = {
-		"cube_pattern.ppm",
-		"cube_pattern.ppm",
-		"cube_pattern.ppm",
-		"cube_pattern.ppm",
-		"cube_pattern.ppm",
-		"cube_pattern.ppm"
-	};
-
-	vector<string> skybox_faces_room = {
-		// 2 are flipped horizontally
-		// 3 are flipped vertically
-		"skybox_room/px_2.ppm",
-		"skybox_room/nx_2.ppm",
-		"skybox_room/py_3.ppm",
-		"skybox_room/ny_3.ppm",
-		"skybox_room/nz_2.ppm",
-		"skybox_room/pz_2.ppm",
-	};
-
-	vector<string> skybox_faces_left = {
-		"skybox_leftEye/nx.ppm",
-		"skybox_leftEye/px.ppm",
-		"skybox_leftEye/py_2.ppm", // rotated 
-		"skybox_leftEye/ny_2.ppm", // rotated
-		"skybox_leftEye/nz.ppm",
-		"skybox_leftEye/pz.ppm",
-	};
-
-	vector<string> skybox_faces_right = {
-		"skybox_rightEye/nx.ppm",
-		"skybox_rightEye/px.ppm",
-		"skybox_rightEye/py_2.ppm", // rotated 
-		"skybox_rightEye/ny_2.ppm", // rotated
-		"skybox_rightEye/nz.ppm",
-		"skybox_rightEye/pz.ppm",
-	};
-
-	const char * CUBE_VERT_PATH = "shader_cube.vert";
-	const char * CUBE_FRAG_PATH = "shader_cube.frag";
-
-	const char * PLANE_VERT_PATH = "shader_plane.vert";
-	const char * PLANE_FRAG_PATH = "shader_plane.frag";
-
-	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
-
-	ColorCubeScene() {
-		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
-
-		skybox_right = new Cube(1, skybox_faces_right, true, false, false);
-
-		skybox_room = new Cube(1, skybox_faces_room, true, false, true);
-
-		cube_1 = new Cube(1, cube_faces, false, false, false); // first cube of size 1
-
-		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
-		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
-
-		// shader configuration - maybe move to Plane::draw()
-		glUseProgram(plane_shader);
-		glUniform1i(glGetUniformLocation(plane_shader, "screenTexture"), 0);
-	}
-
-	~ColorCubeScene(){
-		delete(skybox_left);
-		delete(skybox_right);
-		delete(cube_1);
-		glDeleteProgram(cube_shader);
-		glDeleteProgram(plane_shader);
-	}
-
-	void resetCubes() {
-		cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
-	} 
-
-	void scaleCubes(float val) {
-		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
-	}
-
-	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
-		// change cubeScaleMat according to booleans
-		if (cube_size_up) {
-			if (cubeScaleMat[0][0] < 0.5f && cubeScaleMat[1][1] < 0.5f && cubeScaleMat[2][2] < 0.5f) {
-				scaleCubes(1.01f);
-			}
-		}
-		if (cube_size_down) {
-			if (cubeScaleMat[0][0] > 0.01f && cubeScaleMat[1][1] > 0.01f && cubeScaleMat[2][2] > 0.01f) {
-				scaleCubes(0.99f);
-			}
-		}
-
-		if (cube_size_reset) {
-			resetCubes();
-		}
-
-		// render cubes
-		// specify positions
-		vec3 pos_1 = vec3(0.0f, 0.0f, -4.0f);
-		vec3 pos_2 = vec3(0.0f, 0.0f, -8.0f);
-
-		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);
-		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
-		glm::mat4 M = posMat * cubeScaleMat * posMat_in;
-
-		// draw closer cube
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		cube_1->draw(cube_shader, projection, modelview);
-
-		posMat = glm::translate(glm::mat4(1.0f), pos_2);
-		posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
-		M = posMat * cubeScaleMat * posMat_in;
-
-		// draw further cube
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		cube_1->draw(cube_shader, projection, modelview);
-	}
-
-
-	// render skybox and cubes
-	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
-
-		// shader configuration
-		glUseProgram(cube_shader);
-		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
-
-		// render skybox
-		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f));
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &scaleMat[0][0]);
-
-		// render different texture images for left and right eye to create stereo effect
-		if (isLeftEye) {
-			skybox_left->draw(cube_shader, projection, modelview);
-		}
-		else {
-			skybox_right->draw(cube_shader, projection, modelview);
-		}
-
-		//renderCubes(projection, modelview, uProjection);
-
-	}
-};
-
 
 // An example application that renders a simple cube
 class ExampleApp : public RiftApp {
-	std::shared_ptr<ColorCubeScene> cubeScene;
+	//std::shared_ptr<ColorCubeScene> cubeScene;
 
 public:
 	ExampleApp() { }
@@ -1042,28 +885,37 @@ protected:
 
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
-		cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
+		//cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
 
 		cave = new Cave();
 	}
 
 	void shutdownGl() override {
-		cubeScene.reset();
+		//cubeScene.reset();
 	}
 
 
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
+		//headPos_curr = headPose;
+
+		// position only
+		// orientation frozen to last frame
+		/*headPos_curr[0] = headPos_prev[0];
+		headPos_curr[1] = headPos_prev[1];
+		headPos_curr[2] = headPos_prev[2];*/
 
 		//cout << "isLeft: " << isLeft << endl;
 		
 		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
 		
-		//cave->renderController(projection, glm::inverse(headPose), hand);
+		cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
 		
 		//cubeScene->render(projection, glm::inverse(headPose), isLeft);
+
+		//headPos_prev = headPos_curr;
 	}
 };
  
