@@ -107,7 +107,7 @@ public:
 
 	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
-	glm::mat4 quadScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(9.0f, 9.0f, 9.0f)); // only mat used to scale quad
+	glm::mat4 quadScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
 
 	Cave() {
 		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
@@ -235,7 +235,7 @@ public:
 		// specify scale
 
 		// specify positions
-		vec3 pos_1 = vec3(0.0f, 0.0f, -10.0f);
+		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
 		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);	
 		//glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
 
@@ -247,6 +247,22 @@ public:
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
 		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
+
+		// draw 2nd quad
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
+		M = posMat * quadScaleMat * rotateMat;
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
+
+		// draw 3rd quad as floor
+		rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;
+		M = posMat * quadScaleMat * rotateMat;
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
 
 		//plane_1->draw(plane_shader, tempTex, projection, modelview);
 	};
