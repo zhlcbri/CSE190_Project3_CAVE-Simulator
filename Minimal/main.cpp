@@ -55,9 +55,9 @@ using namespace std;
 //glm::vec3 hand; // hand position
 
 /////// Custom variables
-bool cube_size_up = false; // set to true with LThumbStick to right
-bool cube_size_down = false; // set to true with LThumbStick to left
-bool cube_size_reset = false; // set to true with LThumbStick pressed in
+//bool cube_size_up = false; // set to true with LThumbStick to right
+//bool cube_size_down = false; // set to true with LThumbStick to left
+//bool cube_size_reset = false; // set to true with LThumbStick pressed in
 
 double iod = 0.0;
 double original_iod = 0.0;
@@ -78,9 +78,6 @@ bool a3 = false; // left eye only (right eye black)
 bool a4 = false; // right eye only (left eye black)
 bool a5 = false; // inverted stereo (left eye image rendered to right eye and vice versa)
 
-// Button B controls
-//bool b1 = true; // regular head tracking (both position and orientation)
-//bool b2 = false; // orientation only (position frozen to what it just was before the mode was selected)
 
 bool isPressed = false; // true if any button is pressed
 
@@ -592,37 +589,31 @@ protected:
 			// reset booleans
 			cube_size_up = false;
 			cube_size_down = false;
-			cube_size_reset = false;
+			//cube_size_reset = false;
 
 			// Logic to vary interocular distance
-			if (inputState.Thumbstick[ovrHand_Right].x > 0) {
-				//cout << "iod up" << endl;
-				iod_up = true;
+			if (inputState.Thumbstick[ovrHand_Right].x > 0.1f) {
+				cube_size_up = true;
 			}
-			else if (inputState.Thumbstick[ovrHand_Right].x < 0) {
-				//cout << "iod down" << endl;
-				iod_down = true;
+			else if (inputState.Thumbstick[ovrHand_Right].x < -0.1f) {
+				cube_size_down = true;
 			}
 			else if (inputState.Buttons & ovrButton_RThumb) {
-				//cout << "iod reset" << endl;
-				iod_reset = true;
+				//iod_reset = true;
 			}
 
 			////////////////////////
 			// Logic to resize cubes
-			if (inputState.Thumbstick[ovrHand_Left].x < 0) {
-				//cout << "left thumbstick to the left" << endl;
-				cube_size_down = true;
+			if (inputState.Thumbstick[ovrHand_Left].x < 0.1f) {
+				cube_left = true;
 				//cube_size_up = false;
 			}
-			else if (inputState.Thumbstick[ovrHand_Left].x > 0) {
-				//cout << "left thumbstick to the right" << endl; 
-				cube_size_up = true;
+			else if (inputState.Thumbstick[ovrHand_Left].x > 0.1f) {
+				cube_right = true;
 				//cube_size_down = false;
 			}
 			else if (inputState.Buttons && ovrButton_LThumb) {
-				//cout << "left thubstick pressed in" << endl;
-				cube_size_reset = true;
+				//cube_size_reset = true;
 			}
 
 
@@ -697,14 +688,11 @@ protected:
 
 				isPressed = true;
 
-				if (b1) {
-					b1 = false;
-					b2 = true;
-					//cout << "orientation only (position frozen to what it just was before the mode was selected)" << endl;
+				if (freezeView) {
+					freezeView = false;
 				}
-				else if (b2) {
-					b2 = false;
-					b1 = true;
+				else {
+					freezeView = true;
 				}
 			}
 		}

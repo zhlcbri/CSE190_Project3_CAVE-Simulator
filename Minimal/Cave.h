@@ -37,9 +37,11 @@
 using namespace std;
 using namespace glm;
 
-// Button B controls
-bool b1 = true; // regular head tracking (both position and orientation)
-bool b2 = false; // orientation only (position frozen to what it just was before the mode was selected)
+bool freezeView = false; // freeze viewpoint when set to true
+
+bool cube_left, cube_right, cube_up, cube_down = false; // cube movements
+
+bool cube_size_up, cube_size_down = false; // cube scaling
 
 class Cave {
 private:
@@ -63,8 +65,6 @@ public:
 
 	glm::mat4 headPos_curr = glm::mat4(1.0f);
 	glm::mat4 headPos_prev = glm::mat4(1.0f);
-
-	/*glm::vec3 hand;*/
 
 	vector<string> cube_faces = {
 		"cube_pattern.ppm",
@@ -196,6 +196,16 @@ public:
 	////////////////////
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 		// change cubeScaleMat according to booleans
+		if (cube_size_up) {
+			if (cubeScaleMat[0][0] < 0.5f && cubeScaleMat[1][1] < 0.5f && cubeScaleMat[2][2] < 0.5f) {
+				scaleCubes(1.01f);
+			}
+		}
+		if (cube_size_down) {
+			if (cubeScaleMat[0][0] > 0.1f && cubeScaleMat[1][1] > 0.1f && cubeScaleMat[2][2] > 0.1f) {
+				scaleCubes(0.99f);
+			}
+		}
 
 		// render cubes
 		// specify positions
@@ -209,15 +219,8 @@ public:
 		// draw closer cube
 		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
 		cube_1->draw(cube_shader, projection, modelview);
-
-		//posMat = glm::translate(glm::mat4(1.0f), pos_2);
-		//posMat_in = glm::translate(glm::mat4(1.0f), -pos_2);
-		//M = posMat * cubeScaleMat * posMat_in;
-
-		//// draw further cube
-		//glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
-		//cube_1->draw(cube_shader, projection, modelview);
 	};
+
 
 	////////////////////
 	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel) {
@@ -277,7 +280,7 @@ public:
 		// freeze head orientation
 		headPos_curr = modelview;
 
-		if (b2) {
+		if (freezeView) {
 			headPos_curr[0] = headPos_prev[0];
 			headPos_curr[1] = headPos_prev[1];
 			headPos_curr[2] = headPos_prev[2];
@@ -315,7 +318,7 @@ public:
 		// bind to new framebuffer and draw scene as we normally would to color texture 
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		//glEnable(GL_DEPTH_TEST); // enable depth testing (disabled for rendering screen-space quad)
-		
+
 		// clear the framebuffer's content
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
@@ -332,7 +335,7 @@ public:
 		GLuint uModel = glGetUniformLocation(plane_shader, "model");
 
 		renderQuads(projection, modelview, uModel);
-		
+
 		// clear all relevant buffers
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // set clear color
 		//glClear(GL_COLOR_BUFFER_BIT);
