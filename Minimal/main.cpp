@@ -55,15 +55,6 @@ using namespace std;
 //glm::vec3 hand; // hand position
 
 /////// Custom variables
-//bool cube_size_up = false; // set to true with LThumbStick to right
-//bool cube_size_down = false; // set to true with LThumbStick to left
-//bool cube_size_reset = false; // set to true with LThumbStick pressed in
-
-double iod = 0.0;
-double original_iod = 0.0;
-bool iod_up = false; // true when RThumbStick to right
-bool iod_down = false; // true when RThumbStick to left
-bool iod_reset = false; // true when RThumbStick pressed in
 
 // Button X controls
 bool x1 = true; // show entire scene (cubes and sky box in stereo)
@@ -583,14 +574,19 @@ protected:
 
 	void update() final override
 	{
+		// reset booleans
+		cube_size_up, cube_size_down = false;
+		cube_size_reset = false;
+
+		cube_left, cube_right = false;
+		cube_up, cube_down = false;
+
+		cube_forward, cube_backward = false;
+		cube_pos_reset = false;
+
 		ovrInputState inputState;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
-			// reset booleans
-			cube_size_up = false;
-			cube_size_down = false;
-			//cube_size_reset = false;
-
 			// Logic to vary interocular distance
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.1f) {
 				cube_size_up = true;
@@ -598,22 +594,34 @@ protected:
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.1f) {
 				cube_size_down = true;
 			}
+			else if (inputState.Thumbstick[ovrHand_Right].y > 0.1f) {
+				cube_up = true;
+			}
+			else if (inputState.Thumbstick[ovrHand_Right].y < -0.1f) {
+				cube_down = true;
+			}
 			else if (inputState.Buttons & ovrButton_RThumb) {
-				//iod_reset = true;
+				cube_size_reset = true;
 			}
 
 			////////////////////////
 			// Logic to resize cubes
-			if (inputState.Thumbstick[ovrHand_Left].x < 0.1f) {
+			if (inputState.Thumbstick[ovrHand_Left].x < -0.1f) {
 				cube_left = true;
-				//cube_size_up = false;
 			}
 			else if (inputState.Thumbstick[ovrHand_Left].x > 0.1f) {
 				cube_right = true;
-				//cube_size_down = false;
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].y > 0.1f) {
+				//cube_forward = true;
+				cube_backward = true;
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].y < -0.1f) {
+				/*cube_backward = true;*/
+				cube_forward = true;
 			}
 			else if (inputState.Buttons && ovrButton_LThumb) {
-				//cube_size_reset = true;
+				cube_pos_reset = true;
 			}
 
 
@@ -696,13 +704,10 @@ protected:
 				}
 			}
 		}
-		/////////////
-		// change iod
+
 
 		// reset booleans
-		iod_up = false;
-		iod_down = false;
-		iod_reset = false;
+
 	}
 
 	void onKey(int key, int scancode, int action, int mods) override {

@@ -39,9 +39,11 @@ using namespace glm;
 
 bool freezeView = false; // freeze viewpoint when set to true
 
-bool cube_left, cube_right, cube_up, cube_down = false; // cube movements
+// cube movements
+bool cube_left, cube_right, cube_up, cube_down = false; 
+bool cube_forward, cube_backward, cube_pos_reset = false;
 
-bool cube_size_up, cube_size_down = false; // cube scaling
+bool cube_size_up, cube_size_down, cube_size_reset = false; // cube scaling
 
 class Cave {
 private:
@@ -112,6 +114,7 @@ public:
 	const char * PLANE_VERT_PATH = "shader_plane.vert";
 	const char * PLANE_FRAG_PATH = "shader_plane.frag";
 
+	glm::vec3 cubePos = vec3(0.0f, 0.0f, -4.0f);
 	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
 	glm::mat4 quadScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
@@ -146,13 +149,6 @@ public:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); // TEXTURE_WIDTH?
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		//glBindTexture(GL_TEXTURE_2D, 0); //
-
-		/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);*/
 
 		// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
@@ -193,27 +189,48 @@ public:
 		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
 	};
 
+	void moveCubes(float delta_x, float delta_y, float delta_z) {
+		cubePos = glm::vec3(cubePos.x + delta_x, cubePos.y + delta_y, cubePos.z + delta_z);
+	}
+
 	////////////////////
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
+
 		// change cubeScaleMat according to booleans
 		if (cube_size_up) {
 			if (cubeScaleMat[0][0] < 0.5f && cubeScaleMat[1][1] < 0.5f && cubeScaleMat[2][2] < 0.5f) {
 				scaleCubes(1.01f);
 			}
 		}
-		if (cube_size_down) {
+		else if (cube_size_down) {
 			if (cubeScaleMat[0][0] > 0.1f && cubeScaleMat[1][1] > 0.1f && cubeScaleMat[2][2] > 0.1f) {
 				scaleCubes(0.99f);
 			}
 		}
+		else if (cube_size_reset) {
+			resetCubes();
+		}
 
-		// render cubes
-		// specify positions
-		vec3 pos_1 = vec3(0.0f, 0.0f, -4.0f);
-		vec3 pos_2 = vec3(0.0f, 0.0f, -8.0f);
+		if (cube_left && cubePos.x > -0.5f) {
+			moveCubes(-0.01f, 0.0f, 0.0f);
+		}
+		else if (cube_right && cubePos.x < 0.5f) {
+			moveCubes(0.01f, 0.0f, 0.0f);
+		}
+		else if (cube_forward && cubePos.y < 0.5f) {
+			cout << "cube forward" << endl; //
+			moveCubes(0.0f, 0.01f, 0.0f);
+		}
+		else if (cube_backward && cubePos.y > -0.5f) {
+			cout << "cube backward" << endl; //
+			moveCubes(0.0f, -0.01f, 0.0f);
+		}
+		else if (cube_pos_reset) {
+			cubePos = vec3(0.0f, 0.0f, -4.0f);
+		}
 
-		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), pos_1);
-		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -pos_1);
+		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), cubePos);
+		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -cubePos);
 		glm::mat4 M = posMat * cubeScaleMat * posMat_in;
 
 		// draw closer cube
@@ -256,10 +273,10 @@ public:
 
 	};
 
+	// render cube at left controller
 	void renderController(const mat4 & projection, const mat4 & modelview, vec3 handPos) {
-		// render cube at left controller
+		
 		// specify positions
-
 		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), handPos);
 		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -handPos);
 
