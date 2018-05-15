@@ -91,9 +91,9 @@ public:
 		glBindVertexArray(quadVAO);
 
 		// use the color attachment texture as the texture of the quad plane
-		//glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texColorbuffer);
-		//glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
+		glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
 		
 		// Draw triangles
 		glDrawArrays(GL_TRIANGLES, 0, 6);

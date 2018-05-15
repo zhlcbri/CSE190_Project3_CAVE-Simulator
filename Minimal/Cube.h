@@ -221,7 +221,7 @@ public:
 		/*glDepthMask(GL_TRUE);*/
 
 		glDepthFunc(GL_LESS); // set depth function back to default
-		glCullFace(GL_BACK);
+		glCullFace(GL_BACK); // set default cull backface 
 	};
 
 	// Define the coordinates and indices needed to draw the cube. Note that it is not necessary

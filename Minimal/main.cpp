@@ -837,6 +837,8 @@ protected:
 			}
 
 		});
+		// put renderscene outside
+
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		ovr_CommitTextureSwapChain(_session, _eyeTexture);
@@ -1053,7 +1055,10 @@ protected:
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
+		//cout << "isLeft: " << isLeft << endl;
+		
 		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
+		
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
