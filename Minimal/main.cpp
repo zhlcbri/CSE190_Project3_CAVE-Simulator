@@ -579,22 +579,27 @@ protected:
 		{
 			// Logic to resize cubes
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.1f) {
+				cout << "size up" << endl;
 				cube_size_up = true;
 			}
-			else if (inputState.Thumbstick[ovrHand_Right].x < -0.1f) {
+			if (inputState.Thumbstick[ovrHand_Right].x < -0.1f) {
+				cout << "size down" << endl;
 				cube_size_down = true;
 			}
-			else if (inputState.Thumbstick[ovrHand_Right].y > 0.1f) {
-				cube_up = true;
+			// Logic to move cubes up and down
+			if (inputState.Thumbstick[ovrHand_Right].y > 0.1f) {
+				/*cout << "cube up" << endl;
+				cube_up = true;*/
 			}
-			else if (inputState.Thumbstick[ovrHand_Right].y < -0.1f) {
-				cube_down = true;
+			if (inputState.Thumbstick[ovrHand_Right].y < -0.1f) {
+				//cube_down = true;
 			}
-			else if (inputState.Buttons & ovrButton_RThumb) {
+			
+			if (inputState.Buttons & ovrButton_RThumb) {
 				cube_size_reset = true;
 			}
 
-			// Logic to move cubes
+			// Logic to move cubes left and right
 			if (inputState.Thumbstick[ovrHand_Left].x < -0.1f) {
 				cube_left = true;
 			}
@@ -603,15 +608,18 @@ protected:
 			}
 			else if (inputState.Thumbstick[ovrHand_Left].y > 0.1f) {
 				//cube_forward = true;
-				cube_backward = true;
-			}
-			else if (inputState.Thumbstick[ovrHand_Left].y < -0.1f) {
-				/*cube_backward = true;*/
+				//cube_backward = true;
+
+				cout << "Left y > 0.1f" << endl;
 				cube_forward = true;
 			}
-			else if (inputState.Buttons && ovrButton_LThumb) {
-				cube_pos_reset = true;
-			}
+			//else if (inputState.Thumbstick[ovrHand_Left].y < -0.1f) {
+			//	/*cube_backward = true;*/
+			//	cube_forward = true;
+			//}
+			//else if (inputState.Buttons && ovrButton_LThumb) {
+			//	cube_pos_reset = true;
+			//}
 
 
 			if (!inputState.Buttons) {
@@ -620,7 +628,6 @@ protected:
 
 			// enter wireframe debug mode when 'A' is pressed
 			if ((inputState.Buttons & ovrButton_A) && !isPressed) {
-				// cout << "Button A pressed" << endl;
 				isPressed = true;
 
 				if (debug_mode) {
@@ -632,8 +639,7 @@ protected:
 			}
 
 			// freeze viewpoint when 'B' is pressed
-			/*else */if ((inputState.Buttons & ovrButton_B) && !isPressed) {
-
+			if ((inputState.Buttons & ovrButton_B) && !isPressed) {
 				isPressed = true;
 
 				if (freeze_view) {
@@ -702,8 +708,8 @@ protected:
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
 		// here used to be "B" button controls
 
-		//headPos_left_curr[3] = headPos_left_prev[3];
-		//headPos_right_curr[3] = headPos_right_prev[3];
+		/*headPos_left_curr[3] = headPos_left_prev[3];
+		headPos_right_curr[3] = headPos_right_prev[3];*/
 
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);

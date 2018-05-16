@@ -144,10 +144,10 @@ public:
 	const char * PLANE_VERT_PATH = "shader_plane.vert";
 	const char * PLANE_FRAG_PATH = "shader_plane.frag";
 
-	glm::vec3 cubePos = vec3(0.0f, 0.0f, -4.0f);
-	glm::mat4 cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
+	vec3 cubePos = vec3(0.0f, 0.0f, -4.0f);
+	mat4 cubeScaleMat = scale(mat4(1.0f), vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
-	glm::mat4 quadScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
+	mat4 quadScaleMat = scale(mat4(1.0f), vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
 
 	Cave() {
 		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
@@ -214,7 +214,7 @@ public:
 	};
 
 	void scaleCubes(float val) {
-		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val));
+		cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(val)) * cubeScaleMat; // which on first
 	};
 
 	void moveCubes(float delta_x, float delta_y, float delta_z) {
@@ -239,22 +239,27 @@ public:
 			resetCubes();
 		}
 
+		if (cube_up) {
+			//moveCubes(0.0f, 0.01f, 0.0f);
+		}
+
+
 		if (cube_left && cubePos.x > -0.5f) {
-			moveCubes(-0.01f, 0.0f, 0.0f);
+			//moveCubes(-0.01f, 0.0f, 0.0f);
 		}
 		else if (cube_right && cubePos.x < 0.5f) {
-			moveCubes(0.01f, 0.0f, 0.0f);
+			//moveCubes(0.01f, 0.0f, 0.0f);
 		}
-		else if (cube_forward && cubePos.y < 0.5f) {
-			cout << "cube forward" << endl; //
-			moveCubes(0.0f, 0.01f, 0.0f);
+		else if (cube_forward && cubePos.y > -0.5f) {
+			//cout << "cube forward" << endl; //
+			//moveCubes(0.0f, 0.01f, 0.0f);
 		}
 		else if (cube_backward && cubePos.y > -0.5f) {
-			cout << "cube backward" << endl; //
-			moveCubes(0.0f, -0.01f, 0.0f);
+			//cout << "cube backward" << endl; //
+			//moveCubes(0.0f, -0.01f, 0.0f);
 		}
 		else if (cube_pos_reset) {
-			cubePos = vec3(0.0f, 0.0f, -4.0f);
+			//cubePos = vec3(0.0f, 0.0f, -4.0f);
 		}
 
 		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), cubePos);
@@ -272,15 +277,13 @@ public:
 		// specify positions
 		mat4 posMat = translate(mat4(1.0f), handPos);
 		mat4 posMat_in = translate(mat4(1.0f), -handPos);
-
 		mat4 scaleMat = scale(mat4(1.0f), vec3(0.03f, 0.03f, 0.03f));
-
 		mat4 M = posMat * scaleMat * posMat_in;
 
 		// draw cube at controller position
 		glUseProgram(cube_shader);
-		GLuint uProjection = glGetUniformLocation(cube_shader, "model");
-		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &M[0][0]);
+		GLuint uModel = glGetUniformLocation(cube_shader, "model");
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
 		controller->draw(cube_shader, projection, modelview);
 	};
 
@@ -297,10 +300,15 @@ public:
 			headPos_curr[2] = headPos_prev[2];
 		}	
 
-		mat4 P_prime = getProjectionMatrix(modelview, isLeftEye);
+		//mat4 P_prime = getProjectionMatrix(modelview, isLeftEye);
 
 		/*cout << "projection[3]: " << projection[3].x << ", " << projection[3].y << ", " << projection[3].z << endl;
 		cout << "p'[3]: " << P_prime[3].x << ", " << P_prime[3].y << ", " << P_prime[3].z << endl;*/
+
+
+		// temp: head-in-hand mode
+		//headPos_curr[3] = vec4(hand, 1.0f);
+
 
 		// shader configuration
 		glUseProgram(cube_shader);
@@ -388,7 +396,7 @@ public:
 		mat4 posMat = translate(mat4(1.0f), pos_1);
 		// rotation matrix (R)
 		mat4 rotateMat = rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
-		// model matrix (M)
+		// model matrix (M = T*S*R)
 		mat4 M = posMat * quadScaleMat * rotateMat;
 
 		// draw 1st quad
@@ -427,7 +435,7 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
 		// draw skybox and cubes
-		render(projection,modelview, isLeftEye);
+		render(projection, modelview, isLeftEye);
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
