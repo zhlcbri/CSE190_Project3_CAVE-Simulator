@@ -47,6 +47,8 @@ unsigned int skyboxTexture_right;
 unsigned int skyboxTexture_room;
 unsigned int cubemapTexture;
 
+bool isRoom = false;
+
 class Cube {
 private:
 	int size = 1;
@@ -55,7 +57,7 @@ private:
 public:
 	bool isSkybox = false;
 	bool isLeftEye = false;
-	bool isRoom = false;
+	//bool isRoom = false;
 
 	//glm::mat4 toWorld;
 

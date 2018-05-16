@@ -787,12 +787,10 @@ protected:
 
 	/*virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) = 0;*/
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) = 0;
-
-	// new renderCave() method; need at least projection and view as parameter
 };
 
 
-// An example application that renders a simple cube
+// An example application that renders everything
 class ExampleApp : public RiftApp {
 
 public:
@@ -814,11 +812,12 @@ protected:
 
 	}
 
-	// newly defined function
+	// Main function to render everything
+	// ---------------------------------------------------
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
-		//cout << "isLeft: " << isLeft << endl;
-		
+		cave->renderRoom(projection, inverse(headPose));
+
 		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo, _sceneLayer);
 		
 		cave->renderController(projection, glm::inverse(headPose), hand);

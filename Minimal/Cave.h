@@ -77,6 +77,8 @@ vec3 PA = vec3(-1.0f, -1.0f, 0.0f);
 vec3 PB = vec3(1.0f, -1.0f, 0.0f);
 vec3 PC = vec3(-1.0f, 1.0f, 0.0f);
 
+Cube * skybox_room;
+GLuint cube_shader;
 
 class Cave {
 private:
@@ -85,11 +87,11 @@ public:
 	Cube * cube_1;
 	Cube * skybox_left;
 	Cube * skybox_right;
-	Cube * skybox_room;
+	//Cube * skybox_room;
 	Cube * controller;
 	Plane * plane_1;
 
-	GLuint cube_shader;
+	//GLuint cube_shader;
 	GLuint plane_shader;
 	GLuint FBO, textureColorbuffer, rbo;
 
@@ -149,6 +151,8 @@ public:
 
 	mat4 quadScaleMat = scale(mat4(1.0f), vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
 
+	// Constructor
+	// ---------------------------------------------------
 	Cave() {
 		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
 		skybox_right = new Cube(1, skybox_faces_right, true, false, false);
@@ -187,6 +191,7 @@ public:
 		// use a single renderbuffer object for both a depth AND stencil buffer.
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT);
 		/*glBindRenderbuffer(GL_RENDERBUFFER, 0);*/
+		
 		// now actually attach it
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); 
 									
@@ -196,6 +201,8 @@ public:
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	};
 
+	// Destructor
+	// ---------------------------------------------------
 	~Cave() {
 		delete(skybox_left);
 		delete(skybox_right);
@@ -221,7 +228,8 @@ public:
 		cubePos = glm::vec3(cubePos.x + delta_x, cubePos.y + delta_y, cubePos.z + delta_z);
 	}
 
-	////////////////////
+	// Rendering cubes
+	// ---------------------------------------------------
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 
 		// change cubeScaleMat according to booleans
@@ -287,7 +295,23 @@ public:
 		controller->draw(cube_shader, projection, modelview);
 	};
 
-	// render skybox and cubes
+	// Rendering custom skybox to wrap the entire cave
+	// ---------------------------------------------------
+	void renderRoom(const mat4 & projection, const mat4 & modelview) {
+
+		glUseProgram(cube_shader);
+		GLuint uModel = glGetUniformLocation(cube_shader, "model");
+
+		mat4 scaleMat = scale(mat4(1.0f), vec3(100.0f, 100.0f, 100.0f));
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &scaleMat[0][0]);
+
+		isRoom = true;
+		skybox_room->draw(cube_shader, projection, modelview);
+		isRoom = false;
+	}
+
+	// Rendering scene 
+	// ---------------------------------------------------
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
 
 		// current head matrix
@@ -300,15 +324,8 @@ public:
 			headPos_curr[2] = headPos_prev[2];
 		}	
 
-		//mat4 P_prime = getProjectionMatrix(modelview, isLeftEye);
-
-		/*cout << "projection[3]: " << projection[3].x << ", " << projection[3].y << ", " << projection[3].z << endl;
-		cout << "p'[3]: " << P_prime[3].x << ", " << P_prime[3].y << ", " << P_prime[3].z << endl;*/
-
-
 		// temp: head-in-hand mode
 		//headPos_curr[3] = vec4(hand, 1.0f);
-
 
 		// shader configuration
 		glUseProgram(cube_shader);
@@ -320,18 +337,20 @@ public:
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
-			skybox_left->draw(cube_shader, projection/*P_prime*/, /*modelview)*/headPos_curr);
+			skybox_left->draw(cube_shader, projection, /*modelview)*/headPos_curr);
 		}
 		else {		
-			skybox_right->draw(cube_shader, projection/*P_prime*/, /*modelview)*/headPos_curr);
+			skybox_right->draw(cube_shader, projection, /*modelview)*/headPos_curr);
 		}
 
-		renderCubes(projection/*P_prime*/, /*modelview)*/headPos_curr, uModel);
+		renderCubes(projection, /*modelview)*/headPos_curr, uModel);
 
 		// store head matrix from the last frame
 		headPos_prev = headPos_curr;
 	};
 
+	// calculate projection matrix for off-screen rendering
+	// ---------------------------------------------------
 	mat4 getProjectionMatrix(mat4 model, bool isLeftEye) {
 		vec3 p_a = (vec3)(model * vec4(PA.x, PA.y, PA.z, 1.0f));
 		vec3 p_b = (vec3)(model * vec4(PB.x, PB.y, PB.z, 1.0f));
@@ -375,9 +394,10 @@ public:
 		mat4 P = frustum(l, r, b, t, n, f);
 
 		mat4 M_T = mat4(1.0f);
-		M_T[0] = vec4(v_r.x, v_u.x, v_n.x, 1.0f);
-		M_T[1] = vec4(v_r.y, v_u.y, v_n.y, 1.0f);
-		M_T[2] = vec4(v_r.z, v_u.z, v_n.z, 1.0f);
+		
+		M_T[0] = vec4(v_r.x, v_u.x, v_n.x, 0.0f);
+		M_T[1] = vec4(v_r.y, v_u.y, v_n.y, 0.0f);
+		M_T[2] = vec4(v_r.z, v_u.z, v_n.z, 0.0f);
 
 		mat4 T = mat4(1.0f);
 		T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
@@ -388,7 +408,8 @@ public:
 		return P_prime;
 	}
 
-	////////////////////
+	// Rendering screens
+	// ---------------------------------------------------
 	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel, bool isLeftEye) {
 		// specify position
 		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
@@ -422,24 +443,15 @@ public:
 
 	};
 
-
-	/////////////////////
+	// Rendering scene on screen
+	// ---------------------------------------------------
 	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO, ovrLayerEyeFov sceneLayer) {
-
-		// bind to new framebuffer and draw scene as we normally would to color texture 
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		//glEnable(GL_DEPTH_TEST); // enable depth testing (disabled for rendering screen-space quad)
-
-		// clear the framebuffer's content
-		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // bind to new framebuffer and draw scene as we normally would to color texture 
+		glEnable(GL_DEPTH_TEST); // enable depth testing
+		
+		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-
-		// draw skybox and cubes
-		render(projection, modelview, isLeftEye);
-
-		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
-		//glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
 		// setup the viewport for each eye before rendering the quads
 		if (!isLeftEye) {
@@ -449,16 +461,19 @@ public:
 			glViewport(sceneLayer.Viewport[1].Pos.x, sceneLayer.Viewport[1].Pos.y, sceneLayer.Viewport[1].Size.w, sceneLayer.Viewport[1].Size.h);
 		}
 
-		// draw plane
-		glUseProgram(plane_shader);
-		GLuint uModel = glGetUniformLocation(plane_shader, "model");
+		// draw scene (skybox and cube) to framebuffer with the actual projection
+		mat4 P_prime = getProjectionMatrix(modelview, isLeftEye);
+		render(P_prime/*projection*/, modelview, isLeftEye);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO); // bind back to default framebuffer
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+
+		// draw CAVE screens with the attached framebuffer color texture
+		glUseProgram(plane_shader); 
+		GLuint uModel = glGetUniformLocation(plane_shader, "model");
 		renderQuads(projection, modelview, uModel, isLeftEye);
 
-		// clear all relevant buffers
-		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // set clear color
-		//glClear(GL_COLOR_BUFFER_BIT);
-
+		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear all relevant buffers
 	};
 
 	// utility function for loading a 2D texture from file
@@ -499,6 +514,7 @@ public:
 
 		return textureID;
 	}
+
 };
 
 #endif
