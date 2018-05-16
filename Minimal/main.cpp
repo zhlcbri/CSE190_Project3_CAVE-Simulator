@@ -52,15 +52,7 @@ using namespace std;
 
 #include <GL/glew.h>
 
-//glm::vec3 hand; // hand position
-
 /////// Custom variables
-
-// Button X controls
-bool x1 = true; // show entire scene (cubes and sky box in stereo)
-bool x2 = false; // show just the sky box in stereo
-bool x3 = false; // show just the sky box in mono
-bool x4 = false; // show room instead of bear skybox
 
 // Button A controls
 bool a1 = true; // 3D stereo
@@ -69,16 +61,17 @@ bool a3 = false; // left eye only (right eye black)
 bool a4 = false; // right eye only (left eye black)
 bool a5 = false; // inverted stereo (left eye image rendered to right eye and vice versa)
 
-
-bool isPressed = false; // true if any button is pressed
+// true if any button is pressed
+bool isPressed = false; 
 
 // HMD transformation matrices
-glm::mat4 headPos_left_curr = glm::mat4(1.0f);
-glm::mat4 headPos_right_curr = glm::mat4(1.0f);
-glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
-glm::mat4 headPos_right_prev = glm::mat4(1.0f);
+//glm::mat4 headPos_left_curr = glm::mat4(1.0f);
+//glm::mat4 headPos_right_curr = glm::mat4(1.0f);
+//glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
+//glm::mat4 headPos_right_prev = glm::mat4(1.0f);
 
-glm::vec3 hand = glm::vec3(1.0f);
+// position of left controller
+//glm::vec3 hand = glm::vec3(1.0f);
 
 //Cube * controller;
 Cave * cave;
@@ -445,11 +438,10 @@ class RiftApp : public GlfwApp, public RiftManagerApp {
 public:
 	GLuint _fbo{ 0 };
 
-private:
-	// new framebuffer
-	//GLuint _fbo_2{ 0 };
+	ovrLayerEyeFov _sceneLayer;
 
-	/*GLuint _fbo{ 0 };*/
+private:
+	//GLuint _fbo{ 0 };
 	GLuint _depthBuffer{ 0 };
 	ovrTextureSwapChain _eyeTexture;
 
@@ -460,7 +452,7 @@ private:
 
 	mat4 _eyeProjections[2];
 
-	ovrLayerEyeFov _sceneLayer;
+	//ovrLayerEyeFov _sceneLayer;
 	ovrViewScaleDesc _viewScaleDesc;
 
 	uvec2 _renderTargetSize;
@@ -484,10 +476,6 @@ public:
 
 			// cse190: adjust the eye separation here - need to use 3D vector from central point on Rift for each eye
 			_viewScaleDesc.HmdToEyePose[eye] = erd.HmdToEyePose; 
-
-			// get IOD see slides
-		    /*iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);
-			original_iod = abs(_viewScaleDesc.HmdToEyePose[0].Position.x - _viewScaleDesc.HmdToEyePose[1].Position.x);*/
 			
 			ovrFovPort & fov = _sceneLayer.Fov[eye] = _eyeRenderDescs[eye].Fov;
 			auto eyeSize = ovr_GetFovTextureSize(_session, eye, fov, 1.0f);
@@ -584,10 +572,12 @@ protected:
 		cube_forward, cube_backward = false;
 		cube_pos_reset = false;
 
+		head_in_hand = false;
+
 		ovrInputState inputState;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
-			// Logic to vary interocular distance
+			// Logic to resize cubes
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.1f) {
 				cube_size_up = true;
 			}
@@ -604,8 +594,7 @@ protected:
 				cube_size_reset = true;
 			}
 
-			////////////////////////
-			// Logic to resize cubes
+			// Logic to move cubes
 			if (inputState.Thumbstick[ovrHand_Left].x < -0.1f) {
 				cube_left = true;
 			}
@@ -629,85 +618,38 @@ protected:
 				isPressed = false;
 			}
 
-			///////////////////////////////
-			// Logic to cycle between five modes with the 'A' button
+			// enter wireframe debug mode when 'A' is pressed
 			if ((inputState.Buttons & ovrButton_A) && !isPressed) {
-				//cout << "Button A pressed" << endl;
+				// cout << "Button A pressed" << endl;
 				isPressed = true;
 
-				if (a1) {
-					a1 = false;
-					a2 = true;
-					//cout << "monoscopic mode (left eye image rendered on both eyes)" << endl;
-				}
-				else if (a2) {
-					a2 = false;
-					a3 = true;
-					//cout << "only rendering to left eye" << endl;
-				}
-				else if (a3) {
-					a3 = false;
-					a4 = true;
-					//cout << "only rendering to right eye" << endl;
-				}
-				else if (a4) {
-					a4 = false;
-					a5 = true;
-					//cout << "inverted stereo mode" << endl;
-				}
-				else if (a5) {
-					a1 = true;
-					a5 = false;
-					//cout << "back to default mode" << endl;
-				}
-			}
-
-			///////////////////////////////
-			// Logic to cycle between five modes with the 'X' button
-			else if ((inputState.Buttons & ovrButton_X) && !isPressed) {
-
-				isPressed = true;
-
-				if (x1) {
-					x1 = false;
-					x2 = true;
-					//cout << "showing just the sky box in stereo" << endl;
-				}
-				else if (x2) {
-					x2 = false;
-					x3 = true;
-					//cout << "showing just the sky box in mono" << endl;
-				}
-				else if (x3) {
-					x3 = false;
-					x4 = true;
-					//cout << "showing my room" << endl;
-				}
-				else if (x4) {
-					x4 = false;
-					x1 = true;
-					//cout << "showing the entire scene" << endl;
-				}
-			}
-
-			///////////////////////////////
-			// Logic to cycle between four head tracking modes with the 'B' button
-			else if ((inputState.Buttons & ovrButton_B) && !isPressed) {
-
-				isPressed = true;
-
-				if (freezeView) {
-					freezeView = false;
+				if (debug_mode) {
+					debug_mode = false;
 				}
 				else {
-					freezeView = true;
+					debug_mode = true;
 				}
 			}
+
+			// freeze viewpoint when 'B' is pressed
+			/*else */if ((inputState.Buttons & ovrButton_B) && !isPressed) {
+
+				isPressed = true;
+
+				if (freeze_view) {
+					freeze_view = false;
+				}
+				else {
+					freeze_view = true;
+				}
+			}
+
+			// switch head position to left controller when left index trigger is pulled
+			if ((inputState.IndexTrigger[ovrHand_Left] > 0.1f)) {
+				head_in_hand = true;
+			}
+
 		}
-
-
-		// reset booleans
-
 	}
 
 	void onKey(int key, int scancode, int action, int mods) override {
@@ -726,10 +668,7 @@ protected:
 		double displayMidpointSeconds = ovr_GetPredictedDisplayTime(_session, 0);
 		ovrTrackingState trackState = ovr_GetTrackingState(_session, displayMidpointSeconds, ovrTrue);
 
-		// Process controller status. Useful to know if controller is being used at all, and if the cameras can see it. 
-		// Bits reported:
-		// Bit 1: ovrStatus_OrientationTracked  = Orientation is currently tracked (connected and in use)
-		// Bit 2: ovrStatus_PositionTracked     = Position is currently tracked (false if out of range)
+		// Process controller status
 		unsigned int handStatus[2];
 		handStatus[0] = trackState.HandStatusFlags[0];
 		handStatus[1] = trackState.HandStatusFlags[1];
@@ -752,9 +691,6 @@ protected:
 		hand.y = handPosition[ovrHand_Left].y;
 		hand.z = handPosition[ovrHand_Left].z;
 		
-		// Display positions for debug purposes:
-		//cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << endl;
-		//cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << endl;
 		/////////////////////////////////////////
 
 		ovrPosef eyePoses[2];
@@ -784,6 +720,7 @@ protected:
 		/////// LOOK OVER HERE
 		ovr::for_each_eye([&](ovrEyeType eye) {
 			const auto& vp = _sceneLayer.Viewport[eye];
+
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 			
@@ -851,7 +788,6 @@ protected:
 
 // An example application that renders a simple cube
 class ExampleApp : public RiftApp {
-	//std::shared_ptr<ColorCubeScene> cubeScene;
 
 public:
 	ExampleApp() { }
@@ -864,22 +800,20 @@ protected:
 
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
-		//cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
 
 		cave = new Cave();
 	}
 
 	void shutdownGl() override {
-		//cubeScene.reset();
-	}
 
+	}
 
 	// newly defined function
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
 		//cout << "isLeft: " << isLeft << endl;
 		
-		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
+		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo, _sceneLayer);
 		
 		cave->renderController(projection, glm::inverse(headPose), hand);
 		
