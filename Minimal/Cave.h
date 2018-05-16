@@ -154,11 +154,11 @@ public:
 	// Constructor
 	// ---------------------------------------------------
 	Cave() {
-		skybox_left = new Cube(1, skybox_faces_left, true, true, false);
-		skybox_right = new Cube(1, skybox_faces_right, true, false, false);
-		skybox_room = new Cube(1, skybox_faces_room, true, false, true);
-		cube_1 = new Cube(1, cube_faces, false, false, false); // calibration cube
-		controller = new Cube(1, cube_faces, false, false, false); // controller
+		skybox_left = new Cube(/*1, */skybox_faces_left, true, true, false);
+		skybox_right = new Cube(/*1, */skybox_faces_right, true, false, false);
+		skybox_room = new Cube(/*1, */skybox_faces_room, true, false, true);
+		cube_1 = new Cube(/*1, */cube_faces, false, false, false); // calibration cube
+		controller = new Cube(/*1,*/ cube_faces, false, false, false); // controller
 		plane_1 = new Plane();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);

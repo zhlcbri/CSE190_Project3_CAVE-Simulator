@@ -59,19 +59,15 @@ public:
 	bool isLeftEye = false;
 	//bool isRoom = false;
 
-	//glm::mat4 toWorld;
-
 	GLuint VBO, VAO, EBO;
 	GLuint uProjection, uModelview;
 
-	Cube(int mySize, vector<string> faces, bool check, bool isLeft, bool room)
+	Cube(/*int mySize, */vector<string> faces, bool check, bool isLeft, bool room)
 	{
-		size = mySize;
+		//size = mySize;
 		isSkybox = check;
 		isLeftEye = isLeft;
 		isRoom = room;
-
-		/*toWorld = glm::mat4(1.0f);*/
 
 		myFaces = faces;
 
