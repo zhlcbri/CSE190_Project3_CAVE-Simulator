@@ -53,27 +53,9 @@ using namespace std;
 #include <GL/glew.h>
 
 /////// Custom variables
-
-// Button A controls
-bool a1 = true; // 3D stereo
-bool a2 = false; // mono (the same image rendered on both eyes)
-bool a3 = false; // left eye only (right eye black)
-bool a4 = false; // right eye only (left eye black)
-bool a5 = false; // inverted stereo (left eye image rendered to right eye and vice versa)
-
 // true if any button is pressed
 bool isPressed = false; 
 
-// HMD transformation matrices
-//glm::mat4 headPos_left_curr = glm::mat4(1.0f);
-//glm::mat4 headPos_right_curr = glm::mat4(1.0f);
-//glm::mat4 headPos_left_prev = glm::mat4(1.0f); // use this matrix to track head position each frame
-//glm::mat4 headPos_right_prev = glm::mat4(1.0f);
-
-// position of left controller
-//glm::vec3 hand = glm::vec3(1.0f);
-
-//Cube * controller;
 Cave * cave;
 Plane * plane; // temp use only
 //////////////////////
@@ -611,14 +593,6 @@ protected:
 				//cout << "Left y > 0.1f" << endl;
 				cube_forward = true;
 			}
-			//else if (inputState.Thumbstick[ovrHand_Left].y < -0.1f) {
-			//	/*cube_backward = true;*/
-			//	cube_forward = true;
-			//}
-			//else if (inputState.Buttons && ovrButton_LThumb) {
-			//	cube_pos_reset = true;
-			//}
-
 
 			if (!inputState.Buttons) {
 				isPressed = false;
@@ -724,44 +698,41 @@ protected:
 		ovr::for_each_eye([&](ovrEyeType eye) {
 			const auto& vp = _sceneLayer.Viewport[eye];
 
-			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-			_sceneLayer.RenderPose[eye] = eyePoses[eye];
+			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			
-			if (a1) {
-				// normal stereo rendering; call renderScene() twice one time for each eye
-				if (eye == ovrEye_Left) {
-					renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
-				}
-				else {
-					renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
-				}			
+			_sceneLayer.RenderPose[eye] = eyePoses[eye];
+
+			glViewport(0, 0, vp.Size.w, vp.Size.h);
+			
+			// normal stereo rendering; call renderScene() twice one time for each eye
+			if (eye == ovrEye_Left) {
+				renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
+
+			}
+			else {
+				renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
 			}
 
-			else if (a2) {
-				// render one eye's view to both eyes = monoscopic view
-				renderScene(_eyeProjections[eye], headPos_left_curr, true);
-			}
-			else if (a3) {
-				// render to only left eye
-				if (eye == ovrEye_Left) {
-					renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
-				}
-				
-			}
-			else if (a4) {
-				// render to only right eye
-				if (eye == ovrEye_Right) {
-					renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
-				}
-			}
-			else if (a5) {
-				// render left eye to right eye and vice versa - inverted stereo
-				if (eye == ovrEye_Left) renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
-				if (eye == ovrEye_Right) renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
-			}
+			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			// draw CAVE screens with the attached framebuffer color texture
+			glUseProgram(plane_shader);
+			GLuint uModel = glGetUniformLocation(plane_shader, "model");
 
+			if (eye == ovrEye_Left) {
+				cave->renderQuads(_eyeProjections[ovrEye_Left], headPos_left_curr, uModel);
+
+			}
+			else {
+				cave->renderQuads(_eyeProjections[ovrEye_Right], headPos_right_curr, uModel);
+			}
 		});
-		// put renderscene outside
+
+		// glViewPort(0, 0, ...)
+		// bind FBO
+		// render skybox scene
+		// bind _fbo
+		// glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+		// render quads (foreach)
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -793,7 +764,6 @@ class ExampleApp : public RiftApp {
 public:
 	ExampleApp() { }
 
-
 protected:
 	void initGl() override {
 		RiftApp::initGl();
@@ -813,15 +783,14 @@ protected:
 	// ---------------------------------------------------
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
 
-		cave->renderRoom(projection, inverse(headPose));
+		//cave->renderRoom(projection, inverse(headPose));
 
 		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo, _sceneLayer);
 		
-		cave->renderController(projection, glm::inverse(headPose), hand);
+		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
 		
-		//cubeScene->render(projection, glm::inverse(headPose), isLeft);
 	}
 };
  

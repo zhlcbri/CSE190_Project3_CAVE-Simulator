@@ -48,6 +48,11 @@ mat4 headPos_prev = mat4(1.0f);
 vec3 hand = vec3(1.0f);
 mat4 handMat = mat4(1.0f);;
 
+// translation matrices for 3 quad screens
+mat4 quadModel_1 = mat4(1.0f);
+mat4 quadModel_2 = mat4(1.0f);
+mat4 quadModel_3 = mat4(1.0f);
+
 // HMD (eye) transformation matrices
 mat4 headPos_left_curr = mat4(1.0f);
 mat4 headPos_right_curr = mat4(1.0f);
@@ -80,6 +85,7 @@ vec3 PC = vec3(-1.0f, 1.0f, 0.0f);
 
 Cube * skybox_room;
 GLuint cube_shader;
+GLuint plane_shader;
 
 class Cave {
 private:
@@ -93,7 +99,7 @@ public:
 	Plane * plane_1;
 
 	//GLuint cube_shader;
-	GLuint plane_shader;
+	//GLuint plane_shader;
 	GLuint FBO, textureColorbuffer, rbo;
 
 	GLuint tempTex; // temp
@@ -165,7 +171,24 @@ public:
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
 
-		tempTex = loadTexture(tex_temp);
+		tempTex = loadTexture(tex_temp); // delete
+
+		////////////////
+		// model matrix for 1st quad
+		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
+		mat4 posMat = translate(mat4(1.0f), pos_1);
+		mat4 rotateMat = rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
+		quadModel_1 = posMat * quadScaleMat * rotateMat; // M = T*S*R
+
+		// model matrix for 2nd quad
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
+		quadModel_2 = posMat * quadScaleMat * rotateMat;
+
+		// model matrix for 3rd quad
+		rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;
+		quadModel_3 = posMat * quadScaleMat * rotateMat;
+		////////////////
 
 		// shader configuration - maybe move to Plane::draw()
 		glUseProgram(plane_shader);
@@ -352,19 +375,11 @@ public:
 
 	// calculate projection matrix for off-screen rendering
 	// ---------------------------------------------------
-	mat4 getProjectionMatrix(mat4 model, bool isLeftEye) {
+	mat4 getProjectionMatrix(mat4 model, mat4 eyePos) {
 		vec3 p_a = (vec3)(model * vec4(PA.x, PA.y, PA.z, 1.0f));
 		vec3 p_b = (vec3)(model * vec4(PB.x, PB.y, PB.z, 1.0f));
 		vec3 p_c = (vec3)(model * vec4(PC.x, PC.y, PC.z, 1.0f));
-		vec3 p_e = vec3(1.0f);
-
-		// different eye positions for each eye
-		if (isLeftEye) {
-			p_e = (vec3)headPos_left_curr[3];
-		}
-		else {
-			p_e = (vec3)headPos_right_curr[3];
-		}
+		vec3 p_e = vec3(eyePos[3]);
 
 		// vectors from eye to corners
 		vec3 v_a = p_a - p_e;
@@ -410,82 +425,76 @@ public:
 		return P_prime;
 	}
 
-	// Rendering screens
-	// ---------------------------------------------------
-	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel, bool isLeftEye) {
-		// specify position
-		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
-		// translation matrix (T)
-		mat4 posMat = translate(mat4(1.0f), pos_1);
-		// rotation matrix (R)
-		mat4 rotateMat = rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
-		// model matrix (M = T*S*R)
-		mat4 M = posMat * quadScaleMat * rotateMat;
-
-		// draw 1st quad
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
-
-		//////////////////////////////////
-
-		// draw 2nd quad
-		rotateMat = glm::rotate(mat4(1.0f), -(float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
-		M = posMat * quadScaleMat * rotateMat;
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
-
-		//////////////////////////////////
-
-		// draw 3rd quad as floor
-		rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
-		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;
-		M = posMat * quadScaleMat * rotateMat;
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &M[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
-
-	};
-
 	// Rendering scene on screen
 	// ---------------------------------------------------
 	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO, ovrLayerEyeFov sceneLayer) {
 		
+		// for each quad, bind to new FBO, renderScene using their P_prime, and bind back to default _fbo
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // bind to new framebuffer and draw scene as we normally would to color texture 
 		glEnable(GL_DEPTH_TEST); // enable depth testing
 		
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not using the stencil buffer now
 
-		// setup the viewport for each eye before rendering the quads
-		if (!isLeftEye) {
-			glViewport(sceneLayer.Viewport[0].Pos.x, sceneLayer.Viewport[0].Pos.y, sceneLayer.Viewport[0].Size.w, sceneLayer.Viewport[0].Size.h);
-		}
-		else {
-			glViewport(sceneLayer.Viewport[1].Pos.x, sceneLayer.Viewport[1].Pos.y, sceneLayer.Viewport[1].Size.w, sceneLayer.Viewport[1].Size.h);
-		}
+		mat4 P_prime = getProjectionMatrix(quadModel_1, modelview);
+		render(P_prime, modelview, isLeftEye);
+						
+		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
+				
 
-		// draw scene (skybox and cube) to framebuffer with the actual projection
-		mat4 P_prime = mat4(1.0f);
+		// 2nd quad
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glEnable(GL_DEPTH_TEST);
 
-		if (head_in_hand) {
-			P_prime = getProjectionMatrix(handMat, isLeftEye);
-			render(P_prime, handMat, isLeftEye);
-		}
-		else {
-			P_prime = getProjectionMatrix(modelview, isLeftEye);
-			render(P_prime, modelview, isLeftEye);
-		}
+		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		render(P_prime/*projection*/, modelview, isLeftEye);
+		P_prime = getProjectionMatrix(quadModel_2, modelview);
+		render(P_prime, modelview, isLeftEye);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO); // bind back to default framebuffer
-		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
-		// draw CAVE screens with the attached framebuffer color texture
-		glUseProgram(plane_shader); 
-		GLuint uModel = glGetUniformLocation(plane_shader, "model");
-		renderQuads(projection, modelview, uModel, isLeftEye);
+
+		// 3rd quad
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glEnable(GL_DEPTH_TEST);
+
+		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		P_prime = getProjectionMatrix(quadModel_3, modelview);
+		render(P_prime, modelview, isLeftEye);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
+															
+		//// draw scene (skybox and cube) to framebuffer with the actual projection
+		//mat4 P_prime = mat4(1.0f);
+		//P_prime = getProjectionMatrix(projection, modelview); // need quads' model matrices
+
+		//render(P_prime/*projection*/, modelview, isLeftEye);
+
+		//glBindFramebuffer(GL_FRAMEBUFFER, old_FBO); // bind back to default framebuffer
+		//glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear all relevant buffers
+	};
+
+	// Rendering screens
+	// ---------------------------------------------------
+	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel/*, bool isLeftEye*/) {
+
+		// draw 1st quad
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
+		// draw 2nd quad
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
+		// draw 3rd quad as floor
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+
 	};
 
 	// utility function for loading a 2D texture from file
