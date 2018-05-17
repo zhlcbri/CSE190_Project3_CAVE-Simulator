@@ -36,17 +36,13 @@ using namespace std;
 
 class Plane {
 private:
-	int size = 1;
+	//int size = 1;
 
 public:
 	GLuint quadVAO, quadVBO;
 	GLuint uProjection, uModelview;
 
-	//GLuint FBO, textureColorbuffer;
-
-	Plane(/*int mySize, GLuint textureID*/) {
-		/*size = mySize;
-		textureColorbuffer = textureID;*/
+	Plane() {
 
 		// screen quad VAO
 		glGenVertexArrays(1, &quadVAO);
@@ -75,9 +71,6 @@ public:
 		glDeleteBuffers(1, &quadVAO);
 		glDeleteBuffers(1, &quadVBO);
 	}
-
-
-	//void draw(GLuint shaderProgram, GLuint texColorbuffer) {
 
 	void draw(GLuint shaderProgram, GLuint texColorbuffer, const glm::mat4 & projection, const glm::mat4 & modelview) {
 		//glDisable(GL_CULL_FACE);
@@ -115,9 +108,13 @@ public:
 	//};
 
 	float quadVertices[18] = {
+
+		// first triangle
 		-1.0f, -1.0f, -1.0f,
 		1.0f, -1.0f,-1.0f,
 		-1.0f, 1.0f, -1.0f,
+
+		// second triangle
 		-1.0f, 1.0f,-1.0f,
 		1.0f, -1.0f, -1.0f,
 		1.0f, 1.0f, -1.0f,
@@ -131,19 +128,6 @@ public:
 		//1.0f,  1.0f, -1.0f,
 	};
 
-	// prob won't need
-	float planeVertices[30] = {
-		// positions          // texture Coords 
-		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-
-		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-		5.0f, -0.5f, -5.0f,  2.0f, 2.0f
-	};
-
 };
-
 
 #endif

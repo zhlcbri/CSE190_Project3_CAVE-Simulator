@@ -36,6 +36,7 @@
 
 #include "stb_image.h"
 #include "shader.h"
+#include "Triangle.h"
 
 using namespace std;
 using namespace glm;
@@ -94,6 +95,9 @@ vec3 PC = vec3(-1.0f, 1.0f, 0.0f);
 Cube * skybox_room;
 GLuint cube_shader;
 GLuint plane_shader;
+GLuint pyramid_shader;
+
+Triangle * triangle_1;
 
 class Cave {
 private:
@@ -104,9 +108,9 @@ public:
 	Cube * skybox_right;
 	//Cube * skybox_room;
 	Cube * controller;
+	
 	Plane * plane_1;
-	Plane * plane_2;
-	Plane * plane_3;
+	//Triangle * triangle_1;
 
 	//GLuint cube_shader;
 	//GLuint plane_shader;
@@ -114,7 +118,7 @@ public:
 	GLuint FBO_2, FBO_3;
 	GLuint textureColorbuffer_2, textureColorbuffer_3;
 
-	GLuint tempTex; // temp
+	GLuint tempTex; // temp; delete later
 
 	GLsizei WIDTH = 1280;
 	GLsizei HEIGHT = 720;
@@ -165,6 +169,9 @@ public:
 	const char * PLANE_VERT_PATH = "shader_plane.vert";
 	const char * PLANE_FRAG_PATH = "shader_plane.frag";
 
+	const char * PYRAMID_VERT_PATH = "shader_pyramid.vert";
+	const char * PYRAMID_FRAG_PATH = "shader_pyramid.frag";
+
 	vec3 cubePos = vec3(0.0f, 0.0f, -5.0f);
 	mat4 cubeScaleMat = scale(mat4(1.0f), vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
@@ -181,11 +188,11 @@ public:
 		controller = new Cube(cube_faces, false, false, false); // controller
 		
 		plane_1 = new Plane();
-		plane_2 = new Plane();
-		plane_3 = new Plane();
+		triangle_1 = new Triangle();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
+		pyramid_shader = LoadShaders(PYRAMID_VERT_PATH, PYRAMID_FRAG_PATH);
 
 		tempTex = loadTexture(tex_temp); // delete
 
@@ -386,12 +393,16 @@ public:
 	// ---------------------------------------------------
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
 
-		// current head transformation matrix
-		headPos_curr = modelview;
-
+		// current projection and head transformation matrix
 		projection_curr = projection;
 		modelview_curr = modelview;
 
+		// fix rotation so scene does not rotate with head
+		modelview_curr[0] = modelview_prev[0];
+		modelview_curr[1] = modelview_prev[1];
+		modelview_curr[2] = modelview_prev[2];
+
+		// do not update projection or modelview in freeze mode
 		if (freeze_view) {
 			projection_curr = projection_prev;
 			modelview_curr = modelview_prev;
@@ -407,20 +418,15 @@ public:
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
-			//skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
 			skybox_left->draw(cube_shader, projection_curr, modelview_curr);
 		}
 		else {		
-			//skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
 			skybox_right->draw(cube_shader, projection_curr, modelview_curr);
 		}
 
-		//renderCubes(projection, modelview/*headPos_curr*/, uModel);
 		renderCubes(projection_curr, modelview_curr, uModel);
 
-		// store head matrix from the last frame
-		headPos_prev = headPos_curr;
-
+		// store projection and head matrix from the last frame
 		projection_prev = projection_curr;
 		modelview_prev = modelview_curr;
 	};

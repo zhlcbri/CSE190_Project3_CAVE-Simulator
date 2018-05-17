@@ -596,9 +596,7 @@ protected:
 				cube_pos_reset = true;
 			}
 
-
-			////////////////////////
-
+			// Button controls
 			if (!inputState.Buttons) {
 				isPressed = false;
 			}
@@ -734,13 +732,18 @@ protected:
 			
 			// draw CAVE screens with the attached framebuffer color texture
 			if (eye == ovrEye_Left) {
-				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
-				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 
+				//cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
+				
 			}
 			else {
-				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+
+				//cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), false);
+				
 			}
 		});
 
@@ -799,9 +802,9 @@ protected:
 
 		//cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
-		cave->renderController(projection, glm::inverse(headPose), hand);
+		cave->renderController(projection, inverse(headPose), hand);
 		
-		//cave->render(projection, glm::inverse(headPose), isLeft);
+		//cave->render(projection, inverse(headPose), isLeft);
 		
 
 	}

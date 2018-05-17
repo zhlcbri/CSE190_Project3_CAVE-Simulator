@@ -135,6 +135,8 @@
     <None Include="shader_cube.vert" />
     <None Include="shader_plane.frag" />
     <None Include="shader_plane.vert" />
+    <None Include="shader_pyramid.frag" />
+    <None Include="shader_pyramid.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -146,6 +148,7 @@
     <ClInclude Include="Plane.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="Triangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
