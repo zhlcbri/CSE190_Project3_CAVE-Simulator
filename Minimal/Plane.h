@@ -111,16 +111,6 @@ public:
 		1.0f,  1.0f,  1.0f, 1.0f
 	};
 
-	/*float quadVertices[24] = {
-		-100.0f,  100.0f,  0.0f, 100.0f,
-		-100.0f, -100.0f,  0.0f, 0.0f,
-		100.0f, -100.0f,  100.0f, 0.0f,
-
-		-100.0f,  100.0f,  0.0f, 100.0f,
-		100.0f, -100.0f,  100.0f, 0.0f,
-		100.0f,  100.0f,  100.0f, 100.0f
-	};*/
-
 	// prob won't need
 	float planeVertices[30] = {
 		// positions          // texture Coords 

@@ -97,10 +97,14 @@ public:
 	//Cube * skybox_room;
 	Cube * controller;
 	Plane * plane_1;
+	Plane * plane_2;
+	Plane * plane_3;
 
 	//GLuint cube_shader;
 	//GLuint plane_shader;
 	GLuint FBO, textureColorbuffer, rbo;
+	GLuint FBO_2, FBO_3;
+	GLuint textureColorbuffer_2, textureColorbuffer_3;
 
 	GLuint tempTex; // temp
 
@@ -164,9 +168,13 @@ public:
 		skybox_left = new Cube(skybox_faces_left, true, true, false);
 		skybox_right = new Cube(skybox_faces_right, true, false, false);
 		skybox_room = new Cube(skybox_faces_room, true, false, true);
+		
 		cube_1 = new Cube(cube_faces, false, false, false); // calibration cube
 		controller = new Cube(cube_faces, false, false, false); // controller
+		
 		plane_1 = new Plane();
+		plane_2 = new Plane();
+		plane_3 = new Plane();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
@@ -190,24 +198,46 @@ public:
 		quadModel_3 = posMat * quadScaleMat * rotateMat;
 		////////////////
 
-		// shader configuration - maybe move to Plane::draw()
-		glUseProgram(plane_shader);
-		glUniform1i(glGetUniformLocation(plane_shader, "screenTexture"), 0);
-
 		// framebuffer configuration
 		glGenFramebuffers(1, &FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-		// create a color attachment texture
+		// create color attachment textures
 		glGenTextures(1, &textureColorbuffer);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);		
-
+		
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); // TEXTURE_WIDTH?
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+		//////////////
+		glGenFramebuffers(1, &FBO_2);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_2);
+
+		glGenTextures(1, &textureColorbuffer_2);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer_2);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer_2, 0);
+		///////////////////////
+		glGenFramebuffers(1, &FBO_3);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
+
+		glGenTextures(1, &textureColorbuffer_3);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer_3);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer_3, 0);
+		/////////////////////////////
+
 
 		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
 		glGenRenderbuffers(1, &rbo);
@@ -236,7 +266,11 @@ public:
 		glDeleteProgram(cube_shader);
 		glDeleteProgram(plane_shader);
 		glDeleteBuffers(1, &FBO);
+		glDeleteBuffers(1, &FBO_2);
+		glDeleteBuffers(1, &FBO_3);
 		glDeleteBuffers(1, &textureColorbuffer);
+		glDeleteBuffers(1, &textureColorbuffer_2);
+		glDeleteBuffers(1, &textureColorbuffer_3);
 		glDeleteBuffers(1, &rbo);
 	};
 	
@@ -340,16 +374,16 @@ public:
 
 		// current head matrix
 		headPos_curr = modelview;
+		mat4 temp = mat4(1.0f);
+
+		temp[3] = headPos_curr[3];
 
 		// freeze head orientation
-		if (freeze_view) {
+		/*if (freeze_view) {
 			headPos_curr[0] = headPos_prev[0];
 			headPos_curr[1] = headPos_prev[1];
 			headPos_curr[2] = headPos_prev[2];
-		}	
-
-		// temp: head-in-hand mode
-		//headPos_curr[3] = vec4(hand, 1.0f);
+		}	*/
 
 		// shader configuration
 		glUseProgram(cube_shader);
@@ -361,13 +395,15 @@ public:
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
-			skybox_left->draw(cube_shader, projection, /*modelview)*/headPos_curr);
+			//skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			skybox_left->draw(cube_shader, projection, temp);
 		}
 		else {		
-			skybox_right->draw(cube_shader, projection, /*modelview)*/headPos_curr);
+			//skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			skybox_right->draw(cube_shader, projection, temp);
 		}
 
-		renderCubes(projection, /*modelview)*/headPos_curr, uModel);
+		renderCubes(projection, modelview/*headPos_curr*/, uModel);
 
 		// store head matrix from the last frame
 		headPos_prev = headPos_curr;
@@ -379,7 +415,9 @@ public:
 		vec3 p_a = (vec3)(model * vec4(PA.x, PA.y, PA.z, 1.0f));
 		vec3 p_b = (vec3)(model * vec4(PB.x, PB.y, PB.z, 1.0f));
 		vec3 p_c = (vec3)(model * vec4(PC.x, PC.y, PC.z, 1.0f));
-		vec3 p_e = vec3(eyePos[3]);
+		//vec3 p_e = (vec3)(model * eyePos[3]);
+
+		vec3 p_e = (vec3)eyePos[3];
 
 		// vectors from eye to corners
 		vec3 v_a = p_a - p_e;
@@ -387,9 +425,13 @@ public:
 		vec3 v_c = p_c - p_e;
 
 		// screen-local axes which give us a basis for describing points relative to the screen
-		vec3 v_r = (p_b - p_a) / distance(p_b, p_a);
-		vec3 v_u = (p_c - p_a) / distance(p_c, p_a);
-		vec3 v_n = cross(v_r, v_u) / length(cross(v_r, v_u));
+		vec3 v_r = (p_b - p_a)/* / distance(p_b, p_a)*/;
+		vec3 v_u = (p_c - p_a)/* / distance(p_c, p_a)*/;
+		vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
+
+		v_r = normalize(v_r);
+		v_u = normalize(v_u);
+		v_n = normalize(v_n);
 
 		// near and far clipping plane (n and f units away)
 		float n = 0.01f;
@@ -414,10 +456,13 @@ public:
 		M_T[0] = vec4(v_r.x, v_u.x, v_n.x, 0.0f);
 		M_T[1] = vec4(v_r.y, v_u.y, v_n.y, 0.0f);
 		M_T[2] = vec4(v_r.z, v_u.z, v_n.z, 0.0f);
+		M_T[3] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		// view point offset
-		mat4 T = mat4(1.0f);
-		T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
+		//mat4 T = mat4(1.0f);
+		//T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
+
+		mat4 T = translate(mat4(1.0f), -p_e);
 
 		// actual projection that we want to return
 		mat4 P_prime = P * M_T * T;
@@ -430,6 +475,8 @@ public:
 	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO) {
 		
 		// for each quad, bind to new FBO, renderScene using their P_prime, and bind back to default _fbo
+		
+		// 1st quad
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // bind to new framebuffer and draw scene as we normally would to color texture 
 		glEnable(GL_DEPTH_TEST); // enable depth testing
 		
@@ -440,11 +487,20 @@ public:
 		render(P_prime, modelview, isLeftEye);
 						
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
-				
+
+
+		/////////////////////////
+		/*glUseProgram(plane_shader);
+		GLuint uModel = glGetUniformLocation(plane_shader, "model");
+		glDisable(GL_DEPTH_TEST);
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
+		////////////////////////		
+
 
 		// 2nd quad
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glEnable(GL_DEPTH_TEST);
+		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_2);
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -455,9 +511,16 @@ public:
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
 
+		////////////////////////
+		/*glUseProgram(plane_shader);
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
+		////////////////////////	
+
+
 		// 3rd quad
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glEnable(GL_DEPTH_TEST);
+		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -466,27 +529,27 @@ public:
 		render(P_prime, modelview, isLeftEye);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
-															
-		//// draw scene (skybox and cube) to framebuffer with the actual projection
-		//mat4 P_prime = mat4(1.0f);
-		//P_prime = getProjectionMatrix(projection, modelview); // need quads' model matrices
 
-		//render(P_prime/*projection*/, modelview, isLeftEye);
 
-		//glBindFramebuffer(GL_FRAMEBUFFER, old_FBO); // bind back to default framebuffer
-		//glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		////////////////////////
+		/*glUseProgram(plane_shader);
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
+		////////////////////////	
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear all relevant buffers
 	};
 
 	// Rendering screens
 	// ---------------------------------------------------
-	void renderQuads(const mat4 & projection, const mat4 & modelview/*, GLuint uModel*//*, bool isLeftEye*/) {
+	void renderQuads(const mat4 & projection, const mat4 & modelview) {
 
 		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
 		glUseProgram(plane_shader);
 		GLuint uModel = glGetUniformLocation(plane_shader, "model");
+
+		GLuint uTexture = glGetUniformLocation(plane_shader, "screenTexture");
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
@@ -494,11 +557,11 @@ public:
 
 		// draw 2nd quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
-
+		plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
+	
 		// draw 3rd quad as floor
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer_3, projection, modelview);
 
 	};
 

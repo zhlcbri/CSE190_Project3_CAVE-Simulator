@@ -705,7 +705,7 @@ protected:
 			
 			// normal stereo rendering; call renderScene() twice one time for each eye
 			if (eye == ovrEye_Left) {
-				renderScene(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
+				renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
 
 			}
 			else {
@@ -780,11 +780,11 @@ protected:
 
 	// Main function to render everything
 	// ---------------------------------------------------
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, bool isLeft) {
+	void renderScene(const mat4 & projection, const mat4 & headPose, bool isLeft) {
 
 		//cave->renderRoom(projection, inverse(headPose));
 
-		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
+		cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
