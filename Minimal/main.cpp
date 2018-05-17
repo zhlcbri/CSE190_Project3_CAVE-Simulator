@@ -799,7 +799,7 @@ protected:
 
 		//cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
-		//cave->renderController(projection, glm::inverse(headPose), hand);
+		cave->renderController(projection, glm::inverse(headPose), hand);
 		
 		//cave->render(projection, glm::inverse(headPose), isLeft);
 		

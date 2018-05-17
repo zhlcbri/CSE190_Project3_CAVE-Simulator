@@ -380,11 +380,8 @@ public:
 	// ---------------------------------------------------
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
 
-		// current head matrix
+		// current head transformation matrix
 		headPos_curr = modelview;
-		mat4 temp = mat4(1.0f);
-
-		//temp[3] = headPos_curr[3];
 
 		// freeze head orientation
 		/*if (freeze_view) {
@@ -404,11 +401,9 @@ public:
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
 			skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
-			//skybox_left->draw(cube_shader, projection, temp);
 		}
 		else {		
 			skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
-			//skybox_right->draw(cube_shader, projection, temp);
 		}
 
 		renderCubes(projection, modelview/*headPos_curr*/, uModel);
@@ -491,34 +486,52 @@ public:
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not using the stencil buffer now
 
-		mat4 P_prime = getProjectionMatrix(quadModel_1, modelview);
-		render(P_prime, modelview, isLeftEye);
-						
+		mat4 P_prime = mat4(1.0f);;
+		
+		if (head_in_hand) {
+			P_prime = getProjectionMatrix(quadModel_1, handMat);
+			render(P_prime, handMat, isLeftEye);
+		}
+		else {
+			P_prime = getProjectionMatrix(quadModel_1, modelview);
+			render(P_prime, modelview, isLeftEye);
+		}
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
 
 		// 2nd quad
-		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_2);
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
-		P_prime = getProjectionMatrix(quadModel_2, modelview);
-		render(P_prime, modelview, isLeftEye);
+		if (head_in_hand) {
+			P_prime = getProjectionMatrix(quadModel_2, handMat);
+			render(P_prime, handMat, isLeftEye);
+		}
+		else {
+			P_prime = getProjectionMatrix(quadModel_2, modelview);
+			render(P_prime, modelview, isLeftEye);
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
 
 		// 3rd quad
-		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		P_prime = getProjectionMatrix(quadModel_3, modelview);
-		render(P_prime, modelview, isLeftEye);
+		if (head_in_hand) {
+			P_prime = getProjectionMatrix(quadModel_3, handMat);
+			render(P_prime, handMat, isLeftEye);
+		}
+		else {
+			P_prime = getProjectionMatrix(quadModel_3, modelview);
+			render(P_prime, modelview, isLeftEye);
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
