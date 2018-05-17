@@ -175,7 +175,7 @@ public:
 	vec3 cubePos = vec3(0.0f, 0.0f, -5.0f);
 	mat4 cubeScaleMat = scale(mat4(1.0f), vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
-	mat4 quadScaleMat = scale(mat4(1.0f), vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
+	mat4 quadScaleMat = scale(mat4(1.0f), /*vec3(1.0f, 1.0f, 1.0f)*/vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
 
 	// Constructor
 	// ---------------------------------------------------
@@ -188,7 +188,13 @@ public:
 		controller = new Cube(cube_faces, false, false, false); // controller
 		
 		plane_1 = new Plane();
-		triangle_1 = new Triangle();
+		triangle_1 = new Triangle(vertices);
+		
+		// testing setVertices(); success
+		/*vec3 p1 = vec3(0.5f, -0.5f, 0.0f);
+		vec3 p2 = vec3(-0.5f, -0.5f, 0.0f);
+		vec3 p3 = vec3(-0.5f, 0.5f, 0.0f);
+		triangle_1->setVertices(p1, p2, p3);*/
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
@@ -437,9 +443,12 @@ public:
 		vec3 p_a = (vec3)(model * vec4(PA.x, PA.y, PA.z, 1.0f));
 		vec3 p_b = (vec3)(model * vec4(PB.x, PB.y, PB.z, 1.0f));
 		vec3 p_c = (vec3)(model * vec4(PC.x, PC.y, PC.z, 1.0f));
-		//vec3 p_e = (vec3)(model * eyePos[3]);
-
 		vec3 p_e = (vec3)eyePos[3];
+
+		////////// temp
+		//cout << "resetting vertices for triangle" << endl;
+		//triangle_1->setVertices(p_e, p_a, p_c);
+		//////////
 
 		// vectors from eye to corners
 		vec3 v_a = p_a - p_e;
@@ -553,6 +562,8 @@ public:
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
+
+		//triangle_1->draw(pyramid_shader, P_prime, modelview);
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear all relevant buffers
 	};

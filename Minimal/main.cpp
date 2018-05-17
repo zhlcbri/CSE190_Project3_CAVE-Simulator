@@ -694,18 +694,13 @@ protected:
 		headPos_left_curr = ovr::toGlm(eyePoses[ovrEye_Left]);
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
 
-		/*headPos_left_curr[3] = headPos_left_prev[3];
-		headPos_right_curr[3] = headPos_right_prev[3];*/
-
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
 		GLuint curTexId;
 		ovr_GetTextureSwapChainBufferGL(_session, _eyeTexture, curIndex, &curTexId);
 		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
-
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
-		
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);	
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Rendering content for each eye
@@ -732,18 +727,22 @@ protected:
 			
 			// draw CAVE screens with the attached framebuffer color texture
 			if (eye == ovrEye_Left) {
-				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 
-				//cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
-				
+
+				cave->renderController(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), hand);
+
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 			}
 			else {
-				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 
-				//cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), false);
 				
+				cave->renderController(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), hand);
+
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 			}
 		});
 
@@ -802,7 +801,7 @@ protected:
 
 		//cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
-		cave->renderController(projection, inverse(headPose), hand);
+		//cave->renderController(projection, inverse(headPose), hand);
 		
 		//cave->render(projection, inverse(headPose), isLeft);
 		
