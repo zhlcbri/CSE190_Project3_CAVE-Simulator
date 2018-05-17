@@ -694,19 +694,18 @@ protected:
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		/////// LOOK OVER HERE
+		// Rendering content for each eye
+		// ---------------------------------------------------
 		ovr::for_each_eye([&](ovrEyeType eye) {
-			const auto& vp = _sceneLayer.Viewport[eye];
 
-			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-			
+			const auto& vp = _sceneLayer.Viewport[eye];	
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
 			glViewport(0, 0, vp.Size.w, vp.Size.h);
 			
 			// normal stereo rendering; call renderScene() twice one time for each eye
 			if (eye == ovrEye_Left) {
-				renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
+				renderScene(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
 
 			}
 			else {
@@ -714,16 +713,16 @@ protected:
 			}
 
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			
 			// draw CAVE screens with the attached framebuffer color texture
-			glUseProgram(plane_shader);
-			GLuint uModel = glGetUniformLocation(plane_shader, "model");
-
 			if (eye == ovrEye_Left) {
-				cave->renderQuads(_eyeProjections[ovrEye_Left], headPos_left_curr, uModel);
+				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 
 			}
 			else {
-				cave->renderQuads(_eyeProjections[ovrEye_Right], headPos_right_curr, uModel);
+				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 			}
 		});
 
@@ -785,7 +784,7 @@ protected:
 
 		//cave->renderRoom(projection, inverse(headPose));
 
-		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo, _sceneLayer);
+		cave->renderCave(projection, glm::inverse(headPose), isLeft, _fbo);
 		
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		

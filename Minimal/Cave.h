@@ -427,7 +427,7 @@ public:
 
 	// Rendering scene on screen
 	// ---------------------------------------------------
-	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO, ovrLayerEyeFov sceneLayer) {
+	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO) {
 		
 		// for each quad, bind to new FBO, renderScene using their P_prime, and bind back to default _fbo
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // bind to new framebuffer and draw scene as we normally would to color texture 
@@ -481,7 +481,12 @@ public:
 
 	// Rendering screens
 	// ---------------------------------------------------
-	void renderQuads(const mat4 & projection, const mat4 & modelview, GLuint uModel/*, bool isLeftEye*/) {
+	void renderQuads(const mat4 & projection, const mat4 & modelview/*, GLuint uModel*//*, bool isLeftEye*/) {
+
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+
+		glUseProgram(plane_shader);
+		GLuint uModel = glGetUniformLocation(plane_shader, "model");
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
