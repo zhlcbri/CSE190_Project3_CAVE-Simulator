@@ -543,13 +543,18 @@ protected:
 	void update() final override
 	{
 		// reset booleans
-		cube_size_up, cube_size_down = false;
+		cube_size_up = false;
+		cube_size_down = false;
 		cube_size_reset = false;
 
-		cube_left, cube_right = false;
-		cube_up, cube_down = false;
+		cube_left = false;
+		cube_right = false;
+		
+		cube_up = false;
+		cube_down = false;
 
-		cube_forward, cube_backward = false;
+		cube_forward = false;
+		cube_backward = false;
 		cube_pos_reset = false;
 
 		head_in_hand = false;
@@ -558,41 +563,41 @@ protected:
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
 			// Logic to resize cubes
-			if (inputState.Thumbstick[ovrHand_Right].x > 0.1f) {
-				cout << "size up" << endl;
+			if (inputState.Thumbstick[ovrHand_Right].x > 0.5f) {
 				cube_size_up = true;
 			}
-			if (inputState.Thumbstick[ovrHand_Right].x < -0.1f) {
-				cout << "size down" << endl;
+			else if (inputState.Thumbstick[ovrHand_Right].x < -0.5f) {
 				cube_size_down = true;
 			}
-			// Logic to move cubes up and down
-			if (inputState.Thumbstick[ovrHand_Right].y > 0.1f) {
-				/*cout << "cube up" << endl;
-				cube_up = true;*/
-			}
-			if (inputState.Thumbstick[ovrHand_Right].y < -0.1f) {
-				//cube_down = true;
-			}
-			
-			if (inputState.Buttons & ovrButton_RThumb) {
+			else if (inputState.Buttons & ovrButton_RThumb) {
 				cube_size_reset = true;
 			}
 
-			// Logic to move cubes left and right
-			if (inputState.Thumbstick[ovrHand_Left].x < -0.1f) {
-				cube_left = true;
+			// Logic to move cubes up and down
+			else if (inputState.Thumbstick[ovrHand_Right].y > 0.5f) {
+				cube_up = true;
 			}
-			else if (inputState.Thumbstick[ovrHand_Left].x > 0.1f) {
+			else if (inputState.Thumbstick[ovrHand_Right].y < -0.5f) {
+				cube_down = true;
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].x > 0.5f) {
 				cube_right = true;
 			}
-			else if (inputState.Thumbstick[ovrHand_Left].y > 0.1f) {
-				//cube_forward = true;
-				//cube_backward = true;
-
-				//cout << "Left y > 0.1f" << endl;
+			else if (inputState.Thumbstick[ovrHand_Left].x < -0.5f) {
+				cube_left = true;
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].y > 0.5f) {
 				cube_forward = true;
 			}
+			else if (inputState.Thumbstick[ovrHand_Left].y < -0.5f) {
+				cube_backward = true;
+			}
+			else if (inputState.Buttons & ovrButton_LThumb) {
+				cube_pos_reset = true;
+			}
+
+
+			////////////////////////
 
 			if (!inputState.Buttons) {
 				isPressed = false;
@@ -678,7 +683,6 @@ protected:
 		///// HMD transformation matrix this frame
 		headPos_left_curr = ovr::toGlm(eyePoses[ovrEye_Left]);
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
-		// here used to be "B" button controls
 
 		/*headPos_left_curr[3] = headPos_left_prev[3];
 		headPos_right_curr[3] = headPos_right_prev[3];*/
@@ -701,37 +705,32 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];	
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-			glViewport(0, 0, vp.Size.w, vp.Size.h);
+			//glViewport(0, 0, vp.Size.w, vp.Size.h);
 			
+			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+
 			// normal stereo rendering; call renderScene() twice one time for each eye
 			if (eye == ovrEye_Left) {
-				renderScene(_eyeProjections[ovrEye_Left], headPos_left_curr, true);
+				renderScene(_eyeProjections[ovrEye_Left], ovr::toGlm(eyePoses[ovrEye_Left]), true);
 
 			}
 			else {
-				renderScene(_eyeProjections[ovrEye_Right], headPos_right_curr, false);
+				renderScene(_eyeProjections[ovrEye_Right], ovr::toGlm(eyePoses[ovrEye_Right]), false);
 			}
 
-			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-			
-			// draw CAVE screens with the attached framebuffer color texture
-			if (eye == ovrEye_Left) {
-				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
-				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			//
+			//// draw CAVE screens with the attached framebuffer color texture
+			//if (eye == ovrEye_Left) {
+			//	cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+			//	cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 
-			}
-			else {
-				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
-				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
-			}
+			//}
+			//else {
+			//	cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+			//	cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+			//}
 		});
-
-		// glViewPort(0, 0, ...)
-		// bind FBO
-		// render skybox scene
-		// bind _fbo
-		// glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-		// render quads (foreach)
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -784,11 +783,13 @@ protected:
 
 		//cave->renderRoom(projection, inverse(headPose));
 
-		cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
+		//cave->renderCave(projection, headPose, isLeft, _fbo);
+
+		//cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
-		//cave->render(projection, glm::inverse(headPose), isLeft);
+		cave->render(projection, glm::inverse(headPose), isLeft);
 		
 	}
 };

@@ -58,10 +58,13 @@ public:
 		//glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)(2 * sizeof(float)));
+		//glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 		
+		glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (GLvoid*)(2 * sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)(2 * sizeof(float)));
+
 		// Unbind the currently bound buffer so that we don't accidentally make unwanted changes to it.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -94,21 +97,38 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texColorbuffer);
 		glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
-		
+
 		// Draw triangles
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 	};
 
-	float quadVertices[24] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-							   // positions   // texCoords
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		1.0f, -1.0f,  1.0f, 0.0f,
+	//float quadVertices[24] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+	//						   // positions   // texCoords
+	//	-1.0f,  1.0f,  0.0f, 1.0f,
+	//	-1.0f, -1.0f,  0.0f, 0.0f,
+	//	1.0f, -1.0f,  1.0f, 0.0f,
 
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		1.0f, -1.0f,  1.0f, 0.0f,
-		1.0f,  1.0f,  1.0f, 1.0f
+	//	-1.0f,  1.0f,  0.0f, 1.0f,
+	//	1.0f, -1.0f,  1.0f, 0.0f,
+	//	1.0f,  1.0f,  1.0f, 1.0f
+	//};
+
+	float quadVertices[18] = {
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f,-1.0f,
+		-1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+
+		//-1.0f,  1.0f, -1.0f,
+		//-1.0f, -1.0f, -1.0f,
+		//1.0f, -1.0f, -1.0f,
+
+		//-1.0f,  1.0f, -1.0f,
+		//1.0f, -1.0f, -1.0f,
+		//1.0f,  1.0f, -1.0f,
 	};
 
 	// prob won't need

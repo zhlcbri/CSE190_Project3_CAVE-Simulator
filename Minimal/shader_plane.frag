@@ -11,7 +11,4 @@ void main()
 	
 	FragColor = vec4(col, 1.0f);
 
-    // FragColor = texture(screenTexture, TexCoords); // texCoords is 2D
-
-	// FragColor = vec4(0.4, 0.3, 0.2, 1.0);
 } 

@@ -74,7 +74,9 @@ float IOD = 6.5f;
 
 // cube movements
 bool cube_left, cube_right, cube_up, cube_down = false; 
+
 bool cube_forward, cube_backward, cube_pos_reset = false;
+
 // cube scaling
 bool cube_size_up, cube_size_down, cube_size_reset = false; 
 
@@ -157,7 +159,7 @@ public:
 	const char * PLANE_VERT_PATH = "shader_plane.vert";
 	const char * PLANE_FRAG_PATH = "shader_plane.frag";
 
-	vec3 cubePos = vec3(0.0f, 0.0f, -4.0f);
+	vec3 cubePos = vec3(0.0f, 0.0f, -5.0f);
 	mat4 cubeScaleMat = scale(mat4(1.0f), vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
 	mat4 quadScaleMat = scale(mat4(1.0f), vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
@@ -196,9 +198,9 @@ public:
 		rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
 		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;
 		quadModel_3 = posMat * quadScaleMat * rotateMat;
-		////////////////
+		
 
-		// framebuffer configuration
+		// framebuffer configuration for 1st quad
 		glGenFramebuffers(1, &FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
@@ -212,6 +214,7 @@ public:
 
 		// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+		
 		//////////////
 		glGenFramebuffers(1, &FBO_2);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_2);
@@ -224,6 +227,7 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer_2, 0);
+		
 		///////////////////////
 		glGenFramebuffers(1, &FBO_3);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
@@ -244,7 +248,6 @@ public:
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 		// use a single renderbuffer object for both a depth AND stencil buffer.
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT);
-		/*glBindRenderbuffer(GL_RENDERBUFFER, 0);*/
 		
 		// now actually attach it
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); 
@@ -273,24 +276,28 @@ public:
 		glDeleteBuffers(1, &textureColorbuffer_3);
 		glDeleteBuffers(1, &rbo);
 	};
-	
-	void resetCubes() {
-		cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
-	};
-
-	void scaleCubes(float val) {
-		cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(val)) * cubeScaleMat; // which on first
-	};
 
 	void moveCubes(float delta_x, float delta_y, float delta_z) {
 		cubePos = glm::vec3(cubePos.x + delta_x, cubePos.y + delta_y, cubePos.z + delta_z);
 	}
 
+	void resetCubes() {
+		cubeScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
+	};
+
+	void repositionCubes() {
+		cubePos = vec3(0.0f, 0.0f, -4.0f);
+	}
+
+	void scaleCubes(float val) {
+		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val)); // which on first
+	};
+
 	// Rendering cubes
 	// ---------------------------------------------------
 	void renderCubes(const mat4 & projection, const mat4 & modelview, GLuint uProjection) {
 
-		// change cubeScaleMat according to booleans
+		// cube scaling
 		if (cube_size_up) {
 			if (cubeScaleMat[0][0] < 0.5f && cubeScaleMat[1][1] < 0.5f && cubeScaleMat[2][2] < 0.5f) {
 				scaleCubes(1.01f);
@@ -305,28 +312,29 @@ public:
 			resetCubes();
 		}
 
-		if (cube_up) {
-			//moveCubes(0.0f, 0.01f, 0.0f);
+		// cube movement
+		else if (cube_up && cubePos.y < 0.5f) {
+			moveCubes(0.0f, 0.01f, 0.0f);
 		}
-
-
-		if (cube_left && cubePos.x > -0.5f) {
-			//moveCubes(-0.01f, 0.0f, 0.0f);
+		else if (cube_down&& cubePos.y > -0.5f) {
+			moveCubes(0.0f, -0.01f, 0.0f);
 		}
 		else if (cube_right && cubePos.x < 0.5f) {
-			//moveCubes(0.01f, 0.0f, 0.0f);
+			moveCubes(0.01f, 0.0f, 0.0f);
 		}
-		else if (cube_forward && cubePos.y > -0.5f) {
-			//cout << "cube forward" << endl; //
-			//moveCubes(0.0f, 0.01f, 0.0f);
+		else if (cube_left && cubePos.x > -0.5f) {
+			moveCubes(-0.01f, 0.0f, 0.0f);
 		}
-		else if (cube_backward && cubePos.y > -0.5f) {
-			//cout << "cube backward" << endl; //
-			//moveCubes(0.0f, -0.01f, 0.0f);
+		else if (cube_forward && cubePos.z < -1.0f) {
+			moveCubes(0.0f, 0.0f, 0.01f);
+		}
+		else if (cube_backward && cubePos.z > -9.0f) {
+			moveCubes(0.0f, 0.0f, -0.01f);
 		}
 		else if (cube_pos_reset) {
-			//cubePos = vec3(0.0f, 0.0f, -4.0f);
+			repositionCubes();
 		}
+
 
 		glm::mat4 posMat = glm::translate(glm::mat4(1.0f), cubePos);
 		glm::mat4 posMat_in = glm::translate(glm::mat4(1.0f), -cubePos);
@@ -376,7 +384,7 @@ public:
 		headPos_curr = modelview;
 		mat4 temp = mat4(1.0f);
 
-		temp[3] = headPos_curr[3];
+		//temp[3] = headPos_curr[3];
 
 		// freeze head orientation
 		/*if (freeze_view) {
@@ -395,12 +403,12 @@ public:
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
-			//skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
-			skybox_left->draw(cube_shader, projection, temp);
+			skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			//skybox_left->draw(cube_shader, projection, temp);
 		}
 		else {		
-			//skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
-			skybox_right->draw(cube_shader, projection, temp);
+			skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			//skybox_right->draw(cube_shader, projection, temp);
 		}
 
 		renderCubes(projection, modelview/*headPos_curr*/, uModel);
@@ -478,7 +486,7 @@ public:
 		
 		// 1st quad
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // bind to new framebuffer and draw scene as we normally would to color texture 
-		glEnable(GL_DEPTH_TEST); // enable depth testing
+		//glEnable(GL_DEPTH_TEST); // enable depth testing
 		
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not using the stencil buffer now
@@ -487,15 +495,6 @@ public:
 		render(P_prime, modelview, isLeftEye);
 						
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
-
-
-		/////////////////////////
-		/*glUseProgram(plane_shader);
-		GLuint uModel = glGetUniformLocation(plane_shader, "model");
-		glDisable(GL_DEPTH_TEST);
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
-		////////////////////////		
 
 
 		// 2nd quad
@@ -511,13 +510,6 @@ public:
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
 
 
-		////////////////////////
-		/*glUseProgram(plane_shader);
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
-		////////////////////////	
-
-
 		// 3rd quad
 		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
@@ -529,13 +521,6 @@ public:
 		render(P_prime, modelview, isLeftEye);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO);
-
-
-		////////////////////////
-		/*glUseProgram(plane_shader);
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);*/
-		////////////////////////	
 
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear all relevant buffers
 	};
@@ -553,15 +538,15 @@ public:
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer/*tempTex*/, projection, modelview);
 
 		// draw 2nd quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer_2/*tempTex*/, projection, modelview);
 	
 		// draw 3rd quad as floor
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer_3, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer_3/*tempTex*/, projection, modelview);
 
 	};
 
