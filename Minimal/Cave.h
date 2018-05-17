@@ -44,6 +44,12 @@ using namespace glm;
 mat4 headPos_curr = mat4(1.0f);
 mat4 headPos_prev = mat4(1.0f);
 
+// projection and modelview matrix of the current and previous frame
+mat4 projection_curr = mat4(1.0f);
+mat4 projection_prev = mat4(1.0f);
+mat4 modelview_curr = mat4(1.0f);
+mat4 modelview_prev = mat4(1.0f);
+
 // position vector and matrix of left controller
 vec3 hand = vec3(1.0f);
 mat4 handMat = mat4(1.0f);;
@@ -383,12 +389,13 @@ public:
 		// current head transformation matrix
 		headPos_curr = modelview;
 
-		// freeze head orientation
-		/*if (freeze_view) {
-			headPos_curr[0] = headPos_prev[0];
-			headPos_curr[1] = headPos_prev[1];
-			headPos_curr[2] = headPos_prev[2];
-		}	*/
+		projection_curr = projection;
+		modelview_curr = modelview;
+
+		if (freeze_view) {
+			projection_curr = projection_prev;
+			modelview_curr = modelview_prev;
+		}
 
 		// shader configuration
 		glUseProgram(cube_shader);
@@ -400,16 +407,22 @@ public:
 
 		// render different texture images for left and right eye to create stereo effect
 		if (isLeftEye) {
-			skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			//skybox_left->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			skybox_left->draw(cube_shader, projection_curr, modelview_curr);
 		}
 		else {		
-			skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			//skybox_right->draw(cube_shader, projection, modelview/*headPos_curr*/);
+			skybox_right->draw(cube_shader, projection_curr, modelview_curr);
 		}
 
-		renderCubes(projection, modelview/*headPos_curr*/, uModel);
+		//renderCubes(projection, modelview/*headPos_curr*/, uModel);
+		renderCubes(projection_curr, modelview_curr, uModel);
 
 		// store head matrix from the last frame
 		headPos_prev = headPos_curr;
+
+		projection_prev = projection_curr;
+		modelview_prev = modelview_curr;
 	};
 
 	// calculate projection matrix for off-screen rendering
@@ -476,7 +489,7 @@ public:
 	// Rendering scene on screen
 	// ---------------------------------------------------
 	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO) {
-		
+
 		// for each quad, bind to new FBO, renderScene using their P_prime, and bind back to default _fbo
 		
 		// 1st quad
