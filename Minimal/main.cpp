@@ -52,12 +52,12 @@ using namespace std;
 
 #include <GL/glew.h>
 
-/////// Custom variables
+// Custom variables
 // true if any button is pressed
 bool isPressed = false; 
 
 Cave * cave;
-Plane * plane; // temp use only
+
 //////////////////////
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
@@ -616,7 +616,7 @@ protected:
 			}
 
 			// freeze viewpoint when 'B' is pressed
-			if ((inputState.Buttons & ovrButton_B) && !isPressed) {
+			else if ((inputState.Buttons & ovrButton_B) && !isPressed) {
 				isPressed = true;
 
 				if (freeze_view) {
@@ -624,6 +624,18 @@ protected:
 				}
 				else {
 					freeze_view = true;
+				}
+			}
+
+			// simulate one projector failure (on right eye) when 'Y' is pressed
+			else if ((inputState.Buttons & ovrButton_Y) && !isPressed) {
+				isPressed = true;
+
+				if (screen_fail) {
+					screen_fail = false;
+				}
+				else {
+					screen_fail = true;
 				}
 			}
 
@@ -705,9 +717,9 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];	
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-			//glViewport(0, 0, vp.Size.w, vp.Size.h);
+			glViewport(0, 0, vp.Size.w, vp.Size.h);
 			
-			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 
 			// normal stereo rendering; call renderScene() twice one time for each eye
 			if (eye == ovrEye_Left) {
@@ -718,18 +730,18 @@ protected:
 				renderScene(_eyeProjections[ovrEye_Right], ovr::toGlm(eyePoses[ovrEye_Right]), false);
 			}
 
-			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-			//
-			//// draw CAVE screens with the attached framebuffer color texture
-			//if (eye == ovrEye_Left) {
-			//	cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
-			//	cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			
+			// draw CAVE screens with the attached framebuffer color texture
+			if (eye == ovrEye_Left) {
+				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
 
-			//}
-			//else {
-			//	cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
-			//	cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
-			//}
+			}
+			else {
+				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), false);
+			}
 		});
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
@@ -783,13 +795,13 @@ protected:
 
 		//cave->renderRoom(projection, inverse(headPose));
 
-		//cave->renderCave(projection, headPose, isLeft, _fbo);
+		cave->renderCave(projection, headPose, isLeft, _fbo);
 
 		//cave->renderCave(projection, inverse(headPose), isLeft, _fbo);
 		
 		//cave->renderController(projection, glm::inverse(headPose), hand);
 		
-		cave->render(projection, glm::inverse(headPose), isLeft);
+		//cave->render(projection, glm::inverse(headPose), isLeft);
 		
 	}
 };

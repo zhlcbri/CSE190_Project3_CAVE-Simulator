@@ -59,6 +59,9 @@ mat4 headPos_right_curr = mat4(1.0f);
 mat4 headPos_left_prev = mat4(1.0f); 
 mat4 headPos_right_prev = mat4(1.0f);
 
+// one projector failure on right eye when set to true
+bool screen_fail = false;
+
 // freeze viewpoint when set to true
 bool freeze_view = false; 
 
@@ -66,18 +69,14 @@ bool freeze_view = false;
 bool debug_mode = false;
 
 // switch head position to left controller position when set to true
-// head-in-hand mode
 bool head_in_hand = false;
 
 // average human eye distance: 65 millimeters
 float IOD = 6.5f;
 
-// cube movements
+// cube movements and scaling
 bool cube_left, cube_right, cube_up, cube_down = false; 
-
 bool cube_forward, cube_backward, cube_pos_reset = false;
-
-// cube scaling
 bool cube_size_up, cube_size_down, cube_size_reset = false; 
 
 // variables used to calculate projection matrices for each CAVE screen
@@ -85,6 +84,7 @@ vec3 PA = vec3(-1.0f, -1.0f, 0.0f);
 vec3 PB = vec3(1.0f, -1.0f, 0.0f);
 vec3 PC = vec3(-1.0f, 1.0f, 0.0f);
 
+// objects
 Cube * skybox_room;
 GLuint cube_shader;
 GLuint plane_shader;
@@ -527,7 +527,7 @@ public:
 
 	// Rendering screens
 	// ---------------------------------------------------
-	void renderQuads(const mat4 & projection, const mat4 & modelview) {
+	void renderQuads(const mat4 & projection, const mat4 & modelview, bool isLeft) {
 
 		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
@@ -542,7 +542,14 @@ public:
 
 		// draw 2nd quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer_2/*tempTex*/, projection, modelview);
+
+		// simulate one screen failure on right eye
+		if (!isLeft && screen_fail) {
+			plane_1->draw(plane_shader, 0, projection, modelview);
+		}
+		else {
+			plane_1->draw(plane_shader, textureColorbuffer_2/*tempTex*/, projection, modelview);
+		}
 	
 		// draw 3rd quad as floor
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
