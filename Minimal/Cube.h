@@ -51,7 +51,6 @@ bool isRoom = false;
 
 class Cube {
 private:
-	int size = 1;
 	vector<string> myFaces;
 
 public:
@@ -62,9 +61,8 @@ public:
 	GLuint VBO, VAO, EBO;
 	GLuint uProjection, uModelview;
 
-	Cube(/*int mySize, */vector<string> faces, bool check, bool isLeft, bool room)
+	Cube(vector<string> faces, bool check, bool isLeft, bool room)
 	{
-		//size = mySize;
 		isSkybox = check;
 		isLeftEye = isLeft;
 		isRoom = room;
@@ -226,21 +224,11 @@ public:
 	// to use a 2-dimensional array, since the layout in memory is the same as a 1-dimensional array.
 	// This just looks nicer since it's easy to tell what coordinates/indices belong where.
 	const GLfloat vertices[8][3] = {
+		//"Front" vertices
+		{ -1.0, -1.0,  1.0 },{ 1.0, -1.0,  1.0 },{ 1.0,  1.0,  1.0 },{ -1.0,  1.0,  1.0 },
 
-	{ -(GLfloat)size, -(GLfloat)size,  (GLfloat)size },
-	{ (GLfloat)size, -(GLfloat)size,  (GLfloat)size },
-	{ (GLfloat)size,  (GLfloat)size,  (GLfloat)size },
-	{ -(GLfloat)size,  (GLfloat)size,  (GLfloat)size },
-	{ -(GLfloat)size, -(GLfloat)size, -(GLfloat)size },
-	{ (GLfloat)size, -(GLfloat)size, -(GLfloat)size },
-	{ (GLfloat)size,  (GLfloat)size, -(GLfloat)size },
-	{ -(GLfloat)size, (GLfloat)size, -(GLfloat)size }
-
-		 //"Front" vertices
-		//{ -700.0, -700.0,  700.0 },{ 700.0, -700.0,  700.0 },{ 700.0,  700.0,  700.0 },{ -700.0,  700.0,  700.0 },
-		
-		 //"Back" vertices
-	    //{ -700.0, -700.0, -700.0 },{ 700.0, -700.0, -700.0 },{ 700.0,  700.0, -700.0 },{ -700.0,  700.0, -700.0 }
+		//"Back" vertices
+	    { -1.0, -1.0, -1.0 },{ 1.0, -1.0, -1.0 },{ 1.0,  1.0, -1.0 },{ -1.0,  1.0, -1.0 }
 	};
 
 	// Note that GL_QUADS is deprecated in modern OpenGL (and removed from OSX systems).

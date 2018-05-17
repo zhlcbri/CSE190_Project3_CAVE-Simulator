@@ -44,8 +44,9 @@ using namespace glm;
 mat4 headPos_curr = mat4(1.0f);
 mat4 headPos_prev = mat4(1.0f);
 
-// position of left controller
+// position vector and matrix of left controller
 vec3 hand = vec3(1.0f);
+mat4 handMat = mat4(1.0f);;
 
 // HMD (eye) transformation matrices
 mat4 headPos_left_curr = mat4(1.0f);
@@ -154,11 +155,11 @@ public:
 	// Constructor
 	// ---------------------------------------------------
 	Cave() {
-		skybox_left = new Cube(/*1, */skybox_faces_left, true, true, false);
-		skybox_right = new Cube(/*1, */skybox_faces_right, true, false, false);
-		skybox_room = new Cube(/*1, */skybox_faces_room, true, false, true);
-		cube_1 = new Cube(/*1, */cube_faces, false, false, false); // calibration cube
-		controller = new Cube(/*1,*/ cube_faces, false, false, false); // controller
+		skybox_left = new Cube(skybox_faces_left, true, true, false);
+		skybox_right = new Cube(skybox_faces_right, true, false, false);
+		skybox_room = new Cube(skybox_faces_room, true, false, true);
+		cube_1 = new Cube(cube_faces, false, false, false); // calibration cube
+		controller = new Cube(cube_faces, false, false, false); // controller
 		plane_1 = new Plane();
 
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
@@ -279,14 +280,15 @@ public:
 		cube_1->draw(cube_shader, projection, modelview);
 	};
 
-	// render cube at left controller
+	// Rendering a smaller cube at left controller position
+	// ---------------------------------------------------
 	void renderController(const mat4 & projection, const mat4 & modelview, vec3 handPos) {
 		
 		// specify positions
 		mat4 posMat = translate(mat4(1.0f), handPos);
 		mat4 posMat_in = translate(mat4(1.0f), -handPos);
-		mat4 scaleMat = scale(mat4(1.0f), vec3(0.03f, 0.03f, 0.03f));
-		mat4 M = posMat * scaleMat * posMat_in;
+		mat4 scaleMat = scale(mat4(1.0f), vec3(0.02f, 0.02f, 0.02f));
+		mat4 M = posMat * scaleMat;
 
 		// draw cube at controller position
 		glUseProgram(cube_shader);
@@ -301,7 +303,6 @@ public:
 
 		glUseProgram(cube_shader);
 		GLuint uModel = glGetUniformLocation(cube_shader, "model");
-
 		mat4 scaleMat = scale(mat4(1.0f), vec3(100.0f, 100.0f, 100.0f));
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &scaleMat[0][0]);
 
@@ -310,7 +311,7 @@ public:
 		isRoom = false;
 	}
 
-	// Rendering scene 
+	// Rendering main scene (skybox and calibration cube)
 	// ---------------------------------------------------
 	void render(const mat4 & projection, const mat4 & modelview, bool isLeftEye) {
 
@@ -375,10 +376,8 @@ public:
 		vec3 v_u = (p_c - p_a) / distance(p_c, p_a);
 		vec3 v_n = cross(v_r, v_u) / length(cross(v_r, v_u));
 
-		// near clipping plane (n units away)
+		// near and far clipping plane (n and f units away)
 		float n = 0.01f;
-
-		// far clipping plane (f units away)
 		float f = 1000.0f;
 
 		// distance from eye to plane
@@ -392,13 +391,16 @@ public:
 
 		// projection matrix for CAVE screens
 		mat4 P = frustum(l, r, b, t, n, f);
-
+		
+		// inverse of screen coordinate system
+		// transform objects lying in screen plane to XY plane
 		mat4 M_T = mat4(1.0f);
 		
 		M_T[0] = vec4(v_r.x, v_u.x, v_n.x, 0.0f);
 		M_T[1] = vec4(v_r.y, v_u.y, v_n.y, 0.0f);
 		M_T[2] = vec4(v_r.z, v_u.z, v_n.z, 0.0f);
 
+		// view point offset
 		mat4 T = mat4(1.0f);
 		T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
 
@@ -451,7 +453,7 @@ public:
 		glEnable(GL_DEPTH_TEST); // enable depth testing
 		
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not using the stencil buffer now
 
 		// setup the viewport for each eye before rendering the quads
 		if (!isLeftEye) {
@@ -462,7 +464,17 @@ public:
 		}
 
 		// draw scene (skybox and cube) to framebuffer with the actual projection
-		mat4 P_prime = getProjectionMatrix(modelview, isLeftEye);
+		mat4 P_prime = mat4(1.0f);
+
+		if (head_in_hand) {
+			P_prime = getProjectionMatrix(handMat, isLeftEye);
+			render(P_prime, handMat, isLeftEye);
+		}
+		else {
+			P_prime = getProjectionMatrix(modelview, isLeftEye);
+			render(P_prime, modelview, isLeftEye);
+		}
+
 		render(P_prime/*projection*/, modelview, isLeftEye);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, old_FBO); // bind back to default framebuffer

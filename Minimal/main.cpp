@@ -535,12 +535,10 @@ protected:
 
 		// Set up the framebuffer object
 		glGenFramebuffers(1, &_fbo);
-		/*glGenFramebuffers(1, &_fbo_2);*/
 
 		glGenRenderbuffers(1, &_depthBuffer);
 		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
-		/*glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo_2);*/
 
 		glBindRenderbuffer(GL_RENDERBUFFER, _depthBuffer);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, _renderTargetSize.x, _renderTargetSize.y);
@@ -610,7 +608,7 @@ protected:
 				//cube_forward = true;
 				//cube_backward = true;
 
-				cout << "Left y > 0.1f" << endl;
+				//cout << "Left y > 0.1f" << endl;
 				cube_forward = true;
 			}
 			//else if (inputState.Thumbstick[ovrHand_Left].y < -0.1f) {
@@ -678,9 +676,6 @@ protected:
 		unsigned int handStatus[2];
 		handStatus[0] = trackState.HandStatusFlags[0];
 		handStatus[1] = trackState.HandStatusFlags[1];
-		// Display status for debug purposes:
-		//cerr << "handStatus[left]  = " << handStatus[ovrHand_Left] << endl;
-		//cerr << "handStatus[right] = " << handStatus[ovrHand_Right] << endl;
 
 		// Process controller position and orientation:
 		ovrPosef handPoses[2];  // These are position and orientation in meters in room coordinates, relative to tracking origin. Right-handed cartesian coordinates.
@@ -693,17 +688,20 @@ protected:
 		handPosition[1] = handPoses[1].Position;
 		
 		// update controller position
-		hand.x = handPosition[ovrHand_Left].x;
-		hand.y = handPosition[ovrHand_Left].y;
-		hand.z = handPosition[ovrHand_Left].z;
+		hand.x = handPosition[/*ovrHand_Left*/0].x;
+		hand.y = handPosition[/*ovrHand_Left*/0].y;
+		hand.z = handPosition[/*ovrHand_Left*/0].z;
+
+		// controller transformation matrix this frame
+		handMat = ovr::toGlm(handPoses[0]);
 		
 		/////////////////////////////////////////
 
 		ovrPosef eyePoses[2];
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
 
-		///////////////////////////////
-		///// head positions this frame
+		////////////////////////////////////////
+		///// HMD transformation matrix this frame
 		headPos_left_curr = ovr::toGlm(eyePoses[ovrEye_Left]);
 		headPos_right_curr = ovr::toGlm(eyePoses[ovrEye_Right]);
 		// here used to be "B" button controls
@@ -717,7 +715,6 @@ protected:
 		ovr_GetTextureSwapChainBufferGL(_session, _eyeTexture, curIndex, &curTexId);
 		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
-		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo_2);
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		
