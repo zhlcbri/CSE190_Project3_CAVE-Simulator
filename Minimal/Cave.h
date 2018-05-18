@@ -211,7 +211,7 @@ public:
 
 		////////////////
 		// model matrix for 1st quad
-		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
+		vec3 pos_1 = vec3(0.0f, /*0.0f*/-3.0f, -8.0f);
 		mat4 posMat = translate(mat4(1.0f), pos_1);
 		mat4 rotateMat = rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f));
 		quadModel_1 = posMat * quadScaleMat * rotateMat; // M = T*S*R
@@ -228,11 +228,11 @@ public:
 		/*rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
 		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;*/
 
-		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, -1.0f, -8.0f));
+		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, -3.0f, -8.0f));
 		rotateMat = /*T_b * */rotate(glm::mat4(1.0f), -1.0f / 2.0f * pi<float>(), vec3(1.0f, 0.0f, 0.0f)) 
 			* rotate(glm::mat4(1.0f), -1.0f / 4.0f * pi<float>(), vec3(0.0f, 0.0f, 1.0f));
 
-		quadModel_3 = /*T_b **/ posMat /** T_b*/ * quadScaleMat * rotateMat;
+		quadModel_3 =  T_b /** posMat*/ * quadScaleMat * rotateMat;
 		
 
 		// framebuffer configuration for 1st quad
@@ -718,7 +718,9 @@ public:
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-		}	
+		}
+
+		
 		
 	};
 
