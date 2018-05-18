@@ -41,6 +41,9 @@
 using namespace std;
 using namespace glm;
 
+GLsizei WIDTH = 1000;
+GLsizei HEIGHT = 1000;
+
 // HMD position of the current and previous frame
 mat4 headPos_curr = mat4(1.0f);
 mat4 headPos_prev = mat4(1.0f);
@@ -120,8 +123,8 @@ public:
 
 	GLuint tempTex; // temp; delete later
 
-	GLsizei WIDTH = 1280;
-	GLsizei HEIGHT = 720;
+	/*GLsizei WIDTH = 1000;
+	GLsizei HEIGHT = 1000;*/
 
 	vector<string> cube_faces = {
 		"cube_pattern.ppm",
@@ -190,12 +193,6 @@ public:
 		plane_1 = new Plane();
 		triangle_1 = new Triangle(vertices);
 		
-		// testing setVertices(); success
-		/*vec3 p1 = vec3(0.5f, -0.5f, 0.0f);
-		vec3 p2 = vec3(-0.5f, -0.5f, 0.0f);
-		vec3 p3 = vec3(-0.5f, 0.5f, 0.0f);
-		triangle_1->setVertices(p1, p2, p3);*/
-
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
 		plane_shader = LoadShaders(PLANE_VERT_PATH, PLANE_FRAG_PATH);
 		pyramid_shader = LoadShaders(PYRAMID_VERT_PATH, PYRAMID_FRAG_PATH);
@@ -448,29 +445,23 @@ public:
 		vec3 p_c = (vec3)(model * vec4(PC.x, PC.y, PC.z, 1.0f));
 		vec3 p_e = (vec3)eyePos[3];
 
-		////////// temp
-		//cout << "resetting vertices for triangle" << endl;
-		//triangle_1->setVertices(p_e, p_a, p_c);
-
-		//////////
-
 		// vectors from eye to corners
-		/*vec3 v_a = p_a - p_e;
+		vec3 v_a = p_a - p_e;
 		vec3 v_b = p_b - p_e;
-		vec3 v_c = p_c - p_e;*/
+		vec3 v_c = p_c - p_e;
 
-		vec3 v_a = p_c - p_e;
+		/*vec3 v_a = p_c - p_e;
 		vec3 v_b = p_b - p_e;
-		vec3 v_c = p_a - p_e;
+		vec3 v_c = p_a - p_e;*/
 
 		// screen-local axes which give us a basis for describing points relative to the screen
-		//vec3 v_r = (p_b - p_a)/* / distance(p_b, p_a)*/;
-		//vec3 v_u = (p_c - p_a)/* / distance(p_c, p_a)*/;
-		//vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
-
-		vec3 v_r = (p_b - p_c)/* / distance(p_b, p_a)*/;
-		vec3 v_u = (p_a - p_c)/* / distance(p_c, p_a)*/;
+		vec3 v_r = (p_b - p_a)/* / distance(p_b, p_a)*/;
+		vec3 v_u = (p_c - p_a)/* / distance(p_c, p_a)*/;
 		vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
+
+		//vec3 v_r = (p_b - p_c)/* / distance(p_b, p_a)*/;
+		//vec3 v_u = (p_a - p_c)/* / distance(p_c, p_a)*/;
+		//vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
 
 		v_r = normalize(v_r);
 		v_u = normalize(v_u);
@@ -502,10 +493,10 @@ public:
 		M_T[3] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		// view point offset
-		//mat4 T = mat4(1.0f);
-		//T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
+		mat4 T = mat4(1.0f);
+		T[3] = vec4(-p_e.x, -p_e.y, -p_e.z, 1.0f);
 
-		mat4 T = translate(mat4(1.0f), -p_e);
+		//mat4 T = translate(mat4(1.0f), -p_e);
 
 		// actual projection that we want to return
 		mat4 P_prime = P * M_T * T;
@@ -533,7 +524,7 @@ public:
 			render(P_prime, handMat, isLeftEye);
 		}
 		else {
-			P_prime = getProjectionMatrix(quadModel_1, modelview);
+			P_prime = getProjectionMatrix(quadModel_1, modelview/*inverse(modelview)*/);
 			render(P_prime, modelview, isLeftEye);
 		}
 		
@@ -551,7 +542,7 @@ public:
 			render(P_prime, handMat, isLeftEye);
 		}
 		else {
-			P_prime = getProjectionMatrix(quadModel_2, modelview);
+			P_prime = getProjectionMatrix(quadModel_2, modelview/*inverse(modelview)*/);
 			render(P_prime, modelview, isLeftEye);
 		}
 
@@ -569,7 +560,7 @@ public:
 			render(P_prime, handMat, isLeftEye);
 		}
 		else {
-			P_prime = getProjectionMatrix(quadModel_3, modelview);
+			P_prime = getProjectionMatrix(quadModel_3, modelview/*inverse(modelview)*/);
 			render(P_prime, modelview, isLeftEye);
 		}
 
@@ -615,16 +606,19 @@ public:
 		////////// temp draw triangles here
 		//cout << "resetting vertices for triangle" << endl;
 		vec3 p_e = (vec3)modelview[3];
+
 		triangle_1->setVertices(p_e,
 			vec3(-1.0f, -1.0f, -1.0f),
 			vec3(1.0f, -1.0f, -1.0f));
+		/*triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 
-		//////////
-		//plane_1->draw(plane_shader, 0, projection, modelview);
-		//triangle_1->draw(pyramid_shader, projection, modelview);
-
-		// draw triangles here
-		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);*/
+		
+		/*triangle_1->setVertices(p_e,
+			vec3(-1.0f, 1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f));*/
+		//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
 	};
 
 	// utility function for loading a 2D texture from file

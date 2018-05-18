@@ -167,7 +167,7 @@ public:
 
 		glBindVertexArray(triangleVAO);
 		
-		glLineWidth(6.0f);
+		//glLineWidth(6.0f);
 		//glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 3);

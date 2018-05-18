@@ -710,7 +710,7 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];	
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-			glViewport(0, 0, vp.Size.w, vp.Size.h);
+			glViewport(0, 0, /*vp.Size.w*/WIDTH, /*vp.Size.h*/HEIGHT);
 			
 			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 
