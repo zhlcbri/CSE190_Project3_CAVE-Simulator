@@ -206,16 +206,19 @@ public:
 		// model matrix for 1st quad
 		vec3 pos_1 = vec3(0.0f, 0.0f, -8.0f);
 		mat4 posMat = translate(mat4(1.0f), pos_1);
-		mat4 rotateMat = rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
+		mat4 rotateMat = rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f));
 		quadModel_1 = posMat * quadScaleMat * rotateMat; // M = T*S*R
+		//quadModel_1 = posMat * mat4(1.0f);
 
 		// model matrix for 2nd quad
-		rotateMat = glm::rotate(mat4(1.0f), -(float)(45 * M_PI) / 180, vec3(0.0f, 1.0f, 0.0f));
+		rotateMat = glm::rotate(mat4(1.0f), -45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f));
 		quadModel_2 = posMat * quadScaleMat * rotateMat;
 
 		// model matrix for 3rd quad
-		rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
-		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;
+		/*rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;*/
+		rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
+		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;
 		quadModel_3 = posMat * quadScaleMat * rotateMat;
 		
 
@@ -309,7 +312,7 @@ public:
 	}
 
 	void scaleCubes(float val) {
-		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val)); // which on first
+		cubeScaleMat = cubeScaleMat * glm::scale(glm::mat4(1.0f), glm::vec3(val)); // which one first
 	};
 
 	// Rendering cubes
@@ -448,16 +451,25 @@ public:
 		////////// temp
 		//cout << "resetting vertices for triangle" << endl;
 		//triangle_1->setVertices(p_e, p_a, p_c);
+
 		//////////
 
 		// vectors from eye to corners
-		vec3 v_a = p_a - p_e;
+		/*vec3 v_a = p_a - p_e;
 		vec3 v_b = p_b - p_e;
-		vec3 v_c = p_c - p_e;
+		vec3 v_c = p_c - p_e;*/
+
+		vec3 v_a = p_c - p_e;
+		vec3 v_b = p_b - p_e;
+		vec3 v_c = p_a - p_e;
 
 		// screen-local axes which give us a basis for describing points relative to the screen
-		vec3 v_r = (p_b - p_a)/* / distance(p_b, p_a)*/;
-		vec3 v_u = (p_c - p_a)/* / distance(p_c, p_a)*/;
+		//vec3 v_r = (p_b - p_a)/* / distance(p_b, p_a)*/;
+		//vec3 v_u = (p_c - p_a)/* / distance(p_c, p_a)*/;
+		//vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
+
+		vec3 v_r = (p_b - p_c)/* / distance(p_b, p_a)*/;
+		vec3 v_u = (p_a - p_c)/* / distance(p_c, p_a)*/;
 		vec3 v_n = cross(v_r, v_u)/* / length(cross(v_r, v_u))*/;
 
 		v_r = normalize(v_r);
@@ -583,6 +595,8 @@ public:
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
 		plane_1->draw(plane_shader, textureColorbuffer/*tempTex*/, projection, modelview);
 
+		//////----------------------------------------
+
 		// draw 2nd quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_2[0][0]);
 
@@ -598,6 +612,19 @@ public:
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
 		plane_1->draw(plane_shader, textureColorbuffer_3/*tempTex*/, projection, modelview);
 
+		////////// temp draw triangles here
+		//cout << "resetting vertices for triangle" << endl;
+		vec3 p_e = (vec3)modelview[3];
+		triangle_1->setVertices(p_e,
+			vec3(-1.0f, -1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f));
+
+		//////////
+		//plane_1->draw(plane_shader, 0, projection, modelview);
+		//triangle_1->draw(pyramid_shader, projection, modelview);
+
+		// draw triangles here
+		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 	};
 
 	// utility function for loading a 2D texture from file

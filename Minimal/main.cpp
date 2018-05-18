@@ -728,21 +728,21 @@ protected:
 			// draw CAVE screens with the attached framebuffer color texture
 			if (eye == ovrEye_Left) {
 
-				cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				//cave->renderRoom(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
 				cave->renderQuads(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), true);
 
-				cave->renderController(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), hand);
+				//cave->renderController(_eyeProjections[ovrEye_Left], inverse(headPos_left_curr), hand);
 
-				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Left], inverse(headPos_left_curr));
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Left], inverse(headPos_left_curr), quadModel_1);
 			}
 			else {
 
-				cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				//cave->renderRoom(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
 				cave->renderQuads(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), false);
 				
-				cave->renderController(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), hand);
+				//cave->renderController(_eyeProjections[ovrEye_Right], inverse(headPos_right_curr), hand);
 
-				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Right], inverse(headPos_right_curr));
+				//triangle_1->draw(pyramid_shader, _eyeProjections[ovrEye_Right], inverse(headPos_right_curr), quadModel_1);
 			}
 		});
 
