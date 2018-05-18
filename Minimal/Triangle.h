@@ -147,11 +147,13 @@ public:
 		GLuint uView = glGetUniformLocation(shaderProgram, "view");
 		GLuint uModel = glGetUniformLocation(shaderProgram, "model");
 		GLuint uColorMode = glGetUniformLocation(shaderProgram, "color_mode"); // 0 for green; 1 for red
-
+		mat4 id = mat4(1.0f);
 		glUniformMatrix4fv(uProjection, 1, GL_FALSE, &projection[0][0]);
 		glUniformMatrix4fv(uView, 1, GL_FALSE, &view[0][0]);
-		glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
+		glUniformMatrix4fv(uModel, 1, GL_FALSE, &id[0][0]);
+		//glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
 		
+
 		if (isLeftEye) {
 			glUniform1i(uColorMode, 0);
 		}
@@ -162,10 +164,10 @@ public:
 
 		glBindVertexArray(triangleVAO);
 		
-		//glLineWidth(6.0f);
-		//glDrawElements(GL_LINES, /*6*/3, GL_UNSIGNED_INT, 0);
+		glLineWidth(6.0f);
+		glDrawArrays(GL_LINES, 0, 3);
 		
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 	}
 };
