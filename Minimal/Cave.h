@@ -581,7 +581,7 @@ public:
 		/*rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
 		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;*/
 
-		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, -3.0f, -8.0f));
+		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, /*-6.0f*/-3.0f, -8.0f));
 		rotateMat = /*T_b * */rotate(glm::mat4(1.0f), -1.0f / 2.0f * pi<float>(), vec3(1.0f, 0.0f, 0.0f))
 			* rotate(glm::mat4(1.0f), -1.0f / 4.0f * pi<float>(), vec3(0.0f, 0.0f, 1.0f));
 
@@ -596,7 +596,7 @@ public:
 		glClearColor(0.4f, 0.5f, 0.3f, 1.0f); // clear the framebuffer's content
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not using the stencil buffer now
 
-		mat4 P_prime = mat4(1.0f);;
+		mat4 P_prime = mat4(1.0f);
 		
 		if (head_in_hand) {
 			P_prime = getProjectionMatrix(quadModel_1, handMat);
@@ -672,16 +672,14 @@ public:
 
 		// simulate one screen failure on right eye
 		if (!isLeft && screen_fail) {
-			plane_1->draw(plane_shader, 0, projection, modelview);
+			plane_2->draw(plane_shader, 0, projection, modelview);
 		}
 		else {
-			//plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
 			plane_2->draw(plane_shader, textureColorbuffer_2, projection, modelview);
 		}
 	
 		// draw 3rd quad as floor
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
-		//plane_1->draw(plane_shader, textureColorbuffer_3, projection, modelview);
 		plane_3->draw(plane_shader, textureColorbuffer_3, projection, modelview);
 
 		////////// temp draw triangles here
@@ -710,6 +708,8 @@ public:
 		vec3 p6_3 = (vec3)(quadModel_3 * vec4(p6, 1.0f));
 
 		vec3 p_e = (vec3)(handMat[3]);
+		mat4 MV = handMat;
+		//mat4 MV = modelview;
 
 		if (debug_mode && head_in_hand) {
 
