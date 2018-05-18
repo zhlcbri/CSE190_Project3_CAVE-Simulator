@@ -441,7 +441,8 @@ public:
 		projection_curr = projection;
 		modelview_curr = glm::mat4(1.0f);
 		modelview_curr[3] = modelview[3];
-		modelview_curr = glm::inverse(modelview_curr);
+		//modelview_curr = glm::inverse(modelview_curr);
+		
 		// fix rotation so scene does not rotate with head
 		//modelview_curr[0] = modelview_prev[0];
 		//modelview_curr[1] = modelview_prev[1];
@@ -483,6 +484,15 @@ public:
 		vec3 p_b = (vec3)(model * vec4(PB.x, PB.y, PB.z, 1.0f));
 		vec3 p_c = (vec3)(model * vec4(PC.x, PC.y, PC.z, 1.0f));
 		vec3 p_e = (vec3)eyePos[3];
+
+		/*vec3 p_a = vec3(0.0f, -1.0f, -sqrt(2.0f));
+		vec3 p_b = vec3(sqrt(2.0f), -1.0f, 0.0f);
+		vec3 p_c = vec3(0.0f, 1.0f, -sqrt(2.0f));*/
+
+		/*cout << "p_a: " << p_a.x << ", " << p_a.y << ", " << p_a.z << endl;
+		cout << "p_b: " << p_b.x << ", " << p_b.y << ", " << p_b.z << endl;
+		cout << "p_c: " << p_c.x << ", " << p_c.y << ", " << p_c.z << endl;
+		cout << endl;*/
 
 		// vectors from eye to corners
 		vec3 v_a = p_a - p_e;
@@ -546,6 +556,32 @@ public:
 	// Rendering scene on screen
 	// ---------------------------------------------------
 	void renderCave(const mat4 & projection, const mat4 & modelview, bool isLeftEye, GLuint old_FBO) {
+
+
+		////////////////
+		// model matrix for 1st quad
+		vec3 pos_1 = vec3(0.0f, /*0.0f*/-3.0f, -8.0f);
+		mat4 posMat = translate(mat4(1.0f), pos_1);
+		mat4 rotateMat = rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f));
+		quadModel_1 = posMat * quadScaleMat * rotateMat; // M = T*S*R
+														 //quadModel_1 = posMat * mat4(1.0f);
+
+														 // model matrix for 2nd quad
+		rotateMat = glm::rotate(mat4(1.0f), -45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f));
+		quadModel_2 = posMat * quadScaleMat * rotateMat;
+
+		// model matrix for 3rd quad
+		/*rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
+		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;*/
+
+		/*rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
+		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;*/
+
+		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, -3.0f, -8.0f));
+		rotateMat = /*T_b * */rotate(glm::mat4(1.0f), -1.0f / 2.0f * pi<float>(), vec3(1.0f, 0.0f, 0.0f))
+			* rotate(glm::mat4(1.0f), -1.0f / 4.0f * pi<float>(), vec3(0.0f, 0.0f, 1.0f));
+
+		quadModel_3 = T_b /** posMat*/ * quadScaleMat * rotateMat;
 
 		// for each quad, bind to new FBO, renderScene using their P_prime, and bind back to default _fbo
 		
@@ -623,7 +659,7 @@ public:
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
 
 		//////----------------------------------------
 
@@ -636,7 +672,7 @@ public:
 		}
 		else {
 			//plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
-			plane_2->draw(plane_shader, textureColorbuffer, projection, modelview);
+			plane_2->draw(plane_shader, textureColorbuffer_2, projection, modelview);
 		}
 	
 		// draw 3rd quad as floor
@@ -649,10 +685,23 @@ public:
 		vec3 p_e = (vec3)modelview[3];
 
 		if (debug_mode) {
+
+
 			triangle_1->setVertices(p_e, p1, p2);
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+
+			/*cout << "modelview at q1: " << modelview[3].x << ", " << modelview[3].y
+				<< ", " << modelview[3].z << endl;*/
+
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+
+			/*cout << "modelview at q2: " << modelview[3].x << ", " << modelview[3].y
+				<< ", " << modelview[3].z << endl;*/
+
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			/*cout << "modelview at q3: " << modelview[3].x << ", " << modelview[3].y
+				<< ", " << modelview[3].z << endl;*/
 
 			triangle_1->setVertices(p_e, p1, p3);
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
