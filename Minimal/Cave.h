@@ -449,7 +449,7 @@ public:
 
 		// do not update projection or modelview in freeze mode
 		if (freeze_view) {
-			projection_curr = projection_prev;
+			//projection_curr = projection_prev;
 			modelview_curr = modelview_prev;
 		}
 
@@ -623,7 +623,7 @@ public:
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
 
 		//////----------------------------------------
 
@@ -636,7 +636,7 @@ public:
 		}
 		else {
 			//plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
-			plane_2->draw(plane_shader, textureColorbuffer_2, projection, modelview);
+			plane_2->draw(plane_shader, textureColorbuffer, projection, modelview);
 		}
 	
 		// draw 3rd quad as floor
