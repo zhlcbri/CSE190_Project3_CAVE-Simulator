@@ -60,10 +60,19 @@ private:
 	//int size = 1;
 
 public:
+	GLsizei WIDTH = 1000;
+	GLsizei HEIGHT = 1000;
+
 	GLuint quadVAO, quadVBO;
 	GLuint uProjection, uModelview;
+	GLuint myFBO;
+	GLuint myTexBuffer;
+	GLuint myRBO;
 
-	Plane() {
+	Plane(GLuint yourFBO, GLuint yourTexBuffer, GLuint yourRBO) {
+		myFBO = yourFBO;
+		myTexBuffer = yourTexBuffer;
+		myRBO = yourRBO;
 
 		// screen quad VAO
 		glGenVertexArrays(1, &quadVAO);
@@ -85,6 +94,36 @@ public:
 		// Unbind the currently bound buffer so that we don't accidentally make unwanted changes to it.
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+
+		////////////////////
+
+		//glGenFramebuffers(1, &myFBO);
+		//glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
+
+		//// create color attachment textures
+		//glGenTextures(1, &myTexBuffer);
+		//glBindTexture(GL_TEXTURE_2D, myTexBuffer);
+
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); // TEXTURE_WIDTH?
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		//// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, myTexBuffer, 0);
+
+		//// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+		//glGenRenderbuffers(1, &myRBO);
+		//glBindRenderbuffer(GL_RENDERBUFFER, myRBO);
+		//// use a single renderbuffer object for both a depth AND stencil buffer.
+		//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+
+		//// now actually attach it
+		//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, myRBO);
+
+		//// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+		//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		//	cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	};
 
 	~Plane() {
@@ -109,7 +148,7 @@ public:
 
 		// use the color attachment texture as the texture of the quad plane
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texColorbuffer);
+		glBindTexture(GL_TEXTURE_2D,/* myTexBuffer*/texColorbuffer);
 		glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
 
 		// Draw triangles

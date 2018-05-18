@@ -58,6 +58,7 @@ bool isPressed = false;
 
 Cave * cave;
 
+GLuint default_fbo{ 0 };
 //////////////////////
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
@@ -471,6 +472,8 @@ public:
 		_mirrorSize = _renderTargetSize;
 		_mirrorSize /= 2; // was 4 before
 
+		//
+		default_fbo = _fbo;
 	}
 
 protected:
@@ -710,7 +713,7 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];	
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-			glViewport(0, 0, /*vp.Size.w*/WIDTH, /*vp.Size.h*/HEIGHT);
+			glViewport(0, 0, WIDTH, HEIGHT);
 			
 			//glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 

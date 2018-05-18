@@ -113,13 +113,16 @@ public:
 	Cube * controller;
 	
 	Plane * plane_1;
+	Plane * plane_2;
+	Plane * plane_3;
 	//Triangle * triangle_1;
 
 	//GLuint cube_shader;
 	//GLuint plane_shader;
-	GLuint FBO, textureColorbuffer, rbo;
+	GLuint FBO, textureColorbuffer, RBO;
 	GLuint FBO_2, FBO_3;
 	GLuint textureColorbuffer_2, textureColorbuffer_3;
+	GLuint RBO_2, RBO_3;
 
 	GLuint tempTex; // temp; delete later
 
@@ -178,7 +181,7 @@ public:
 	vec3 cubePos = vec3(0.0f, 0.0f, -5.0f);
 	mat4 cubeScaleMat = scale(mat4(1.0f), vec3(0.3f, 0.3f, 0.3f)); // only mat used to scale cube
 
-	mat4 quadScaleMat = scale(mat4(1.0f), /*vec3(1.0f, 1.0f, 1.0f)*/vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
+	mat4 quadScaleMat = scale(mat4(1.0f), /*vec3(2.0f, 2.0f, 2.0f)*/vec3(8.0f, 8.0f, 8.0f)); // only mat used to scale quad
 
 	// Constructor
 	// ---------------------------------------------------
@@ -190,7 +193,14 @@ public:
 		cube_1 = new Cube(cube_faces, false, false, false); // calibration cube
 		controller = new Cube(cube_faces, false, false, false); // controller
 		
-		plane_1 = new Plane();
+		/*plane_1 = new Plane();
+		plane_2 = new Plane();
+		plane_3 = new Plane();*/
+
+		plane_1 = new Plane(FBO, textureColorbuffer, RBO);
+		plane_2 = new Plane(FBO_2, textureColorbuffer_2, RBO_2);
+		plane_3 = new Plane(FBO_3, textureColorbuffer_3, RBO_3);
+
 		triangle_1 = new Triangle(vertices);
 		
 		cube_shader = LoadShaders(CUBE_VERT_PATH, CUBE_FRAG_PATH);
@@ -214,9 +224,15 @@ public:
 		// model matrix for 3rd quad
 		/*rotateMat = glm::rotate(mat4(1.0f), (float)(45 * M_PI) / 180, vec3(0.0f, 0.0f, 1.0f));
 		rotateMat = glm::rotate(mat4(1.0f), -(float)(90 * M_PI) / 180, vec3(1.0f, 0.0f, 0.0f)) * rotateMat;*/
-		rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
-		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;
-		quadModel_3 = posMat * quadScaleMat * rotateMat;
+
+		/*rotateMat = glm::rotate(mat4(1.0f), -90 * pi<float>() / 180, vec3(1.0f, 0.0f, 0.0f));
+		rotateMat = glm::rotate(mat4(1.0f), 45 * pi<float>() / 180, vec3(0.0f, 1.0f, 0.0f)) * rotateMat;*/
+
+		mat4 T_b = translate(mat4(1.0f), vec3(0.0f, -1.0f, -8.0f));
+		rotateMat = /*T_b * */rotate(glm::mat4(1.0f), -1.0f / 2.0f * pi<float>(), vec3(1.0f, 0.0f, 0.0f)) 
+			* rotate(glm::mat4(1.0f), -1.0f / 4.0f * pi<float>(), vec3(0.0f, 0.0f, 1.0f));
+
+		quadModel_3 = /*T_b **/ posMat /** T_b*/ * quadScaleMat * rotateMat;
 		
 
 		// framebuffer configuration for 1st quad
@@ -234,6 +250,20 @@ public:
 		// to render whole screen to a texture call glViewport() before rendering to framebuffer with the new dimensions of texture
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 		
+		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+		glGenRenderbuffers(1, &RBO);
+		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+		// use a single renderbuffer object for both a depth AND stencil buffer.
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT);
+
+		// now actually attach it
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		//////////////
 		glGenFramebuffers(1, &FBO_2);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_2);
@@ -241,12 +271,21 @@ public:
 		glGenTextures(1, &textureColorbuffer_2);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer_2);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer_2, 0);
 		
+		glGenRenderbuffers(1, &RBO_2);
+		glBindRenderbuffer(GL_RENDERBUFFER, RBO_2);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO_2);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		///////////////////////
 		glGenFramebuffers(1, &FBO_3);
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_3);
@@ -254,27 +293,24 @@ public:
 		glGenTextures(1, &textureColorbuffer_3);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer_3);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); 
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer_3, 0);
-		/////////////////////////////
 
+		glGenRenderbuffers(1, &RBO_3);
+		glBindRenderbuffer(GL_RENDERBUFFER, RBO_3);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
 
-		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-		glGenRenderbuffers(1, &rbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		// use a single renderbuffer object for both a depth AND stencil buffer.
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, /*GL_TEXTURE_WIDTH*/WIDTH, /*GL_TEXTURE_HEIGHT*/HEIGHT);
-		
-		// now actually attach it
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); 
-									
-		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO_3);
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		/////////////////////////////
+
+
+		
 	};
 
 	// Destructor
@@ -293,7 +329,9 @@ public:
 		glDeleteBuffers(1, &textureColorbuffer);
 		glDeleteBuffers(1, &textureColorbuffer_2);
 		glDeleteBuffers(1, &textureColorbuffer_3);
-		glDeleteBuffers(1, &rbo);
+		glDeleteBuffers(1, &RBO);
+		glDeleteBuffers(1, &RBO_2);
+		glDeleteBuffers(1, &RBO_3);
 	};
 
 	void moveCubes(float delta_x, float delta_y, float delta_z) {
@@ -401,12 +439,13 @@ public:
 
 		// current projection and head transformation matrix
 		projection_curr = projection;
-		modelview_curr = modelview;
-
+		modelview_curr = glm::mat4(1.0f);
+		modelview_curr[3] = modelview[3];
+		modelview_curr = glm::inverse(modelview_curr);
 		// fix rotation so scene does not rotate with head
-		modelview_curr[0] = modelview_prev[0];
-		modelview_curr[1] = modelview_prev[1];
-		modelview_curr[2] = modelview_prev[2];
+		//modelview_curr[0] = modelview_prev[0];
+		//modelview_curr[1] = modelview_prev[1];
+		//modelview_curr[2] = modelview_prev[2];
 
 		// do not update projection or modelview in freeze mode
 		if (freeze_view) {
@@ -584,7 +623,7 @@ public:
 
 		// draw 1st quad
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_1[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer/*tempTex*/, projection, modelview);
+		plane_1->draw(plane_shader, textureColorbuffer, projection, modelview);
 
 		//////----------------------------------------
 
@@ -596,21 +635,23 @@ public:
 			plane_1->draw(plane_shader, 0, projection, modelview);
 		}
 		else {
-			plane_1->draw(plane_shader, textureColorbuffer_2/*tempTex*/, projection, modelview);
+			//plane_1->draw(plane_shader, textureColorbuffer_2, projection, modelview);
+			plane_2->draw(plane_shader, textureColorbuffer_2, projection, modelview);
 		}
 	
 		// draw 3rd quad as floor
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &quadModel_3[0][0]);
-		plane_1->draw(plane_shader, textureColorbuffer_3/*tempTex*/, projection, modelview);
+		//plane_1->draw(plane_shader, textureColorbuffer_3, projection, modelview);
+		plane_3->draw(plane_shader, textureColorbuffer_3, projection, modelview);
 
 		////////// temp draw triangles here
 		//cout << "resetting vertices for triangle" << endl;
-		vec3 p_e = (vec3)modelview[3];
+		/*vec3 p_e = (vec3)modelview[3];
 
 		triangle_1->setVertices(p_e,
 			vec3(-1.0f, -1.0f, -1.0f),
 			vec3(1.0f, -1.0f, -1.0f));
-		/*triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 
 		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
 		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);*/
