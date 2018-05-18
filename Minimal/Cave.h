@@ -646,20 +646,80 @@ public:
 
 		////////// temp draw triangles here
 		//cout << "resetting vertices for triangle" << endl;
-		/*vec3 p_e = (vec3)modelview[3];
+		vec3 p_e = (vec3)modelview[3];
 
-		triangle_1->setVertices(p_e,
-			vec3(-1.0f, -1.0f, -1.0f),
-			vec3(1.0f, -1.0f, -1.0f));
-		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+		if (debug_mode) {
+			triangle_1->setVertices(p_e, p1, p2);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-		triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);*/
+			triangle_1->setVertices(p_e, p1, p3);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p1, p4);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p1, p5);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p1, p6);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p2, p3);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p2, p4);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p2, p5);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p2, p6);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p3, p4);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p3, p5);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p3, p6);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p4, p5);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+
+			triangle_1->setVertices(p_e, p5, p6);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+		}	
 		
-		/*triangle_1->setVertices(p_e,
-			vec3(-1.0f, 1.0f, -1.0f),
-			vec3(1.0f, -1.0f, -1.0f));*/
-		//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
 	};
 
 	// utility function for loading a 2D texture from file

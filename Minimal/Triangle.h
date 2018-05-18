@@ -106,11 +106,6 @@ public:
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
-
-		// temp
-		/*vec3 pos_1 = vec3(0.0f, 0.0f, -5.0f);
-		mat4 triangle_T = translate(mat4(1.0f), pos_1);
-		triangle_M = triangle_T * triangle_S;*/
 	}
 
 	// reset vertices so we can draw multiple triangles using one object
@@ -158,7 +153,7 @@ public:
 		glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
 		
 		if (isLeftEye) {
-			glUniform1i(uColorMode, /*0*/1);
+			glUniform1i(uColorMode, 0);
 		}
 		else {
 			glUniform1i(uColorMode, 1);
@@ -168,9 +163,9 @@ public:
 		glBindVertexArray(triangleVAO);
 		
 		//glLineWidth(6.0f);
-		//glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_LINES, /*6*/3, GL_UNSIGNED_INT, 0);
 		
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 	}
 };
