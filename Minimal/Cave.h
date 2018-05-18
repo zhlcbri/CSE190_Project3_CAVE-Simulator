@@ -686,7 +686,7 @@ public:
 
 		////////// temp draw triangles here
 		//cout << "resetting vertices for triangle" << endl;
-		vec3 p_e = (vec3)modelview[3];
+		//vec3 p_e = (vec3)modelview[3];
 
 		vec3 p1_1 = (vec3)(quadModel_1 * vec4(p1, 1.0f));
 		vec3 p2_1 = (vec3)(quadModel_1 * vec4(p2, 1.0f));
@@ -709,210 +709,138 @@ public:
 		vec3 p5_3 = (vec3)(quadModel_3 * vec4(p5, 1.0f));
 		vec3 p6_3 = (vec3)(quadModel_3 * vec4(p6, 1.0f));
 
+		vec3 p_e = (vec3)(handMat[3]);
 
-		if (debug_mode) {
+		if (debug_mode && head_in_hand) {
 
 			triangle_1->setVertices(p_e, p1_1, p2_1);
 			triangle_2->setVertices(p_e, p1_2, p2_2);
 			triangle_3->setVertices(p_e, p1_3, p2_3);
 
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p1_1, p3_1);
 			triangle_2->setVertices(p_e, p1_2, p3_2);
 			triangle_3->setVertices(p_e, p1_3, p3_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p1_1, p4_1);
 			triangle_2->setVertices(p_e, p1_2, p4_2);
 			triangle_3->setVertices(p_e, p1_3, p4_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p1_1, p5_1);
 			triangle_2->setVertices(p_e, p1_2, p5_2);
 			triangle_3->setVertices(p_e, p1_3, p5_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p1_1, p6_1);
 			triangle_2->setVertices(p_e, p1_2, p6_2);
 			triangle_3->setVertices(p_e, p1_3, p6_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-			//////////////////////////////////////
+			////////////////////////////////////////
 
 			triangle_1->setVertices(p_e, p2_1, p3_1);
 			triangle_2->setVertices(p_e, p2_2, p3_2);
 			triangle_3->setVertices(p_e, p2_3, p3_3);
 
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p2_1, p4_1);
 			triangle_2->setVertices(p_e, p2_2, p4_2);
 			triangle_3->setVertices(p_e, p2_3, p4_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
 			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p2_1, p5_1);
 			triangle_2->setVertices(p_e, p2_2, p5_2);
 			triangle_3->setVertices(p_e, p2_3, p5_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p2_1, p6_1);
 			triangle_2->setVertices(p_e, p2_2, p6_2);
 			triangle_3->setVertices(p_e, p2_3, p6_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-			//////////////////////////////////////
+			////////////////////////////////////////
 
 			triangle_1->setVertices(p_e, p3_1, p4_1);
 			triangle_2->setVertices(p_e, p3_2, p4_2);
 			triangle_3->setVertices(p_e, p3_3, p4_3);
 
 			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p3_1, p5_1);
 			triangle_2->setVertices(p_e, p3_2, p5_2);
 			triangle_3->setVertices(p_e, p3_3, p5_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
 			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p3_1, p6_1);
 			triangle_2->setVertices(p_e, p3_2, p6_2);
 			triangle_3->setVertices(p_e, p3_3, p6_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-			///////////////////////////////////////
+			/////////////////////////////////////////
 
 			triangle_1->setVertices(p_e, p4_1, p5_1);
 			triangle_2->setVertices(p_e, p4_2, p5_2);
 			triangle_3->setVertices(p_e, p4_3, p5_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
 			triangle_1->setVertices(p_e, p4_1, p6_1);
 			triangle_2->setVertices(p_e, p4_2, p6_2);
 			triangle_3->setVertices(p_e, p4_3, p6_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-			///////////////////////////////////////
+			/////////////////////////////////////////
 
 			triangle_1->setVertices(p_e, p5_1, p6_1);
 			triangle_2->setVertices(p_e, p5_2, p6_2);
 			triangle_3->setVertices(p_e, p5_3, p6_3);
 
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
+			//triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
+			//triangle_2->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
+			//triangle_3->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
 
-
-			/*triangle_1->setVertices(p_e, p1, p2);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			
-			
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);*/
-
-
-			/*triangle_1->setVertices(p_e, p1, p3);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p1, p4);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p1, p5);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p1, p6);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p2, p3);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p2, p4);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p2, p5);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p2, p6);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p3, p4);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p3, p5);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p3, p6);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p4, p5);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);
-
-			triangle_1->setVertices(p_e, p5, p6);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_1, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_2, isLeft);
-			triangle_1->draw(pyramid_shader, projection, modelview, quadModel_3, isLeft);*/
 		}
 
 		

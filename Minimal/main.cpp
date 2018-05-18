@@ -605,7 +605,7 @@ protected:
 			}
 
 			// enter wireframe debug mode when 'A' is pressed
-			if ((inputState.Buttons & ovrButton_A) && !isPressed) {
+			if ((inputState.Buttons & /*ovrButton_A*/ovrButton_X) && !isPressed) {
 				isPressed = true;
 
 				if (debug_mode) {

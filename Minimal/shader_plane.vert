@@ -19,6 +19,10 @@ void main()
 	//gl_Position = projection * view * model * vec4(aPos.x, aPos.y, -1.0, 1.0);
 
 	TexCoords = vec2(aPos.x / 2 + 0.5, aPos.y / 2 + 0.5);
-	gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	
+	gl_Position = projection * view * model * vec4(aPos.x, aPos.y, 0.0, 1.0);
+	
+	//gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+
 
 }  
